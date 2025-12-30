@@ -92,12 +92,14 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
                     <div className="w-px h-6 bg-slate-800 mx-2"></div>
                     {/* Social Buttons */}
                     <div className="flex items-center gap-2">
-                        <Link
-                            to="/about"
-                            className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 transition-all group"
+                        <a
+                            href="https://wa.me/918100144901"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 transition-all group"
                         >
-                            <span className="text-sm font-medium text-slate-300 group-hover:text-yellow-400 transition-colors">Contact Us</span>
-                        </Link>
+                            <span className="text-sm font-medium text-[#25D366] group-hover:text-[#4ade80] transition-colors">WhatsApp Us</span>
+                        </a>
                         <a
                             href="https://instagram.com/hq.sportslab"
                             target="_blank"

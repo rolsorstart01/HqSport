@@ -73,7 +73,6 @@ const Home = () => {
                     <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up delay-200">
                         <Link to="/book" className="btn-primary w-full sm:w-auto px-10 py-5 text-lg group">
                             Book a Court
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link to="/about" className="btn-secondary w-full sm:w-auto px-10 py-5 text-lg backdrop-blur-md group">
                             <span className="relative z-10">Corporate Events</span>
@@ -111,7 +110,7 @@ const Home = () => {
                                 key={index}
                                 className="glass-card p-10 md:p-14 group cursor-default flex items-start gap-6"
                             >
-                                <div className="w-16 h-16 rounded-3xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-yellow-900/10 border border-yellow-500/10">
+                                <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-yellow-900/10 border border-yellow-500/10">
                                     {feature.icon}
                                 </div>
                                 <div>
@@ -180,12 +179,12 @@ const Home = () => {
             </section>
 
             {/* Pricing Section */}
-            <section className="py-32 relative">
+            <section className="py-40 relative">
                 <div className="absolute inset-0 bg-[#020617]"></div>
 
                 <div className="relative max-w-6xl mx-auto px-6">
                     {/* Header */}
-                    <div className="text-center mb-20">
+                    <div className="text-center mb-12">
                         <span className="text-gold-gradient text-sm font-medium uppercase tracking-widest">Pricing</span>
                         <h2 className="text-4xl md:text-6xl font-bold text-white mt-4 mb-6 tracking-tight">
                             Simple & <span className="text-gold-gradient">Transparent</span>
@@ -195,52 +194,61 @@ const Home = () => {
                         </p>
                     </div>
 
-                    {/* Pricing Cards */}
-                    <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
-                        {/* Morning */}
-                        <div className="glass-card p-10 flex flex-col items-center justify-between text-center hover:bg-white/5 transition-colors">
+                </div>
+
+                <div className="h-16 md:h-20 lg:h-24"></div>
+
+                {/* Pricing Cards */}
+                <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto items-stretch">
+                    {/* Morning */}
+                    <div className="glass-card p-12 flex flex-col items-center text-center hover:bg-white/5 transition-colors h-full">
+                        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-800 text-slate-300 text-sm font-medium">
+                                <Clock className="w-4 h-4" />
+                                Morning
+                            </div>
                             <div>
-                                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-800 text-slate-300 text-sm font-medium mb-8">
-                                    <Clock className="w-4 h-4" />
-                                    Morning
-                                </div>
                                 <div className="text-5xl font-bold text-white mb-2">₹800</div>
-                                <div className="text-slate-500 text-lg mb-8">per hour</div>
-                                <p className="text-slate-400 text-base">6:00 AM — 1:00 PM</p>
+                                <div className="text-slate-500 text-lg">per hour</div>
                             </div>
-                            <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-8">Book Now</Link>
+                            <p className="text-slate-400 text-base">6:00 AM — 1:00 PM</p>
                         </div>
+                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Book Now</Link>
+                    </div>
 
-                        {/* Evening - Featured */}
-                        <div className="glass-card p-12 text-center flex flex-col items-center relative transform lg:-translate-y-4 border-yellow-500/30 bg-gradient-to-b from-yellow-500/5 to-transparent">
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-gold-gradient text-black text-sm font-bold shadow-lg shadow-yellow-500/20">
-                                Most Popular
+                    {/* Evening - Featured */}
+                    <div className="glass-card p-12 text-center flex flex-col items-center relative transform lg:-translate-y-6 border-yellow-500/30 bg-gradient-to-b from-yellow-500/5 to-transparent h-full overflow-visible">
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-8 py-2 rounded-full bg-gold-gradient text-black text-sm font-bold shadow-lg shadow-yellow-500/20 uppercase tracking-wider z-20">
+                            Most Popular
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center gap-8 pt-6">
+                            <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-yellow-500/10 text-yellow-400 text-sm font-medium">
+                                <Sparkles className="w-4 h-4" />
+                                Evening
                             </div>
                             <div>
-                                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-yellow-500/10 text-yellow-400 text-sm font-medium mb-8 mt-2">
-                                    <Sparkles className="w-4 h-4" />
-                                    Evening
-                                </div>
-                                <div className="text-6xl font-bold text-gold-gradient mb-2">₹1200</div>
-                                <div className="text-slate-500 text-lg mb-8">per hour</div>
-                                <p className="text-slate-300 text-base">1:00 PM — 12:00 AM</p>
+                                <div className="text-6xl font-bold text-gold-gradient mb-3">₹1200</div>
+                                <div className="text-slate-500 text-lg">per hour</div>
                             </div>
-                            <Link to="/book" className="btn-primary w-full justify-center py-4 text-lg shadow-xl shadow-yellow-500/20 mt-8">Book Now</Link>
+                            <p className="text-slate-300 text-lg">1:00 PM — 12:00 AM</p>
                         </div>
+                        <Link to="/book" className="btn-primary w-full justify-center py-4 text-lg shadow-xl shadow-yellow-500/20 mt-12">Book Now</Link>
+                    </div>
 
-                        {/* Paddle Rental */}
-                        <div className="glass-card p-10 flex flex-col items-center justify-between text-center hover:bg-white/5 transition-colors">
+                    {/* Paddle Rental */}
+                    <div className="glass-card p-12 flex flex-col items-center text-center hover:bg-white/5 transition-colors h-full">
+                        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium">
+                                <Trophy className="w-4 h-4" />
+                                Equipment
+                            </div>
                             <div>
-                                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium mb-8">
-                                    <Trophy className="w-4 h-4" />
-                                    Equipment
-                                </div>
                                 <div className="text-5xl font-bold text-white mb-2">₹250</div>
-                                <div className="text-slate-500 text-lg mb-8">per hour</div>
-                                <p className="text-slate-400 text-base">Pro Paddle Rental</p>
+                                <div className="text-slate-500 text-lg">per hour</div>
                             </div>
-                            <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-8">Add to Booking</Link>
+                            <p className="text-slate-400 text-base">Pro Paddle Rental</p>
                         </div>
+                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Add to Booking</Link>
                     </div>
                 </div>
             </section>
@@ -272,7 +280,7 @@ const Home = () => {
                         </div>
 
                         {/* Info */}
-                        <div className="glass-card p-12">
+                        <div className="glass-card p-8 md:p-10">
                             <h3 className="text-2xl font-bold text-white mb-8">Visit Our Venue</h3>
 
                             <div className="space-y-8 mb-12">
@@ -305,15 +313,14 @@ const Home = () => {
 
                             <Link to="/book" className="btn-primary w-full justify-center py-4 text-lg">
                                 <span>Book Now</span>
-                                <ArrowRight className="w-5 h-5 ml-2" />
                             </Link>
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* Final CTA */}
-            <section className="py-40 relative overflow-hidden">
+            < section className="py-40 relative overflow-hidden" >
                 <div className="absolute inset-0 bg-[#020617]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-900/20 via-[#020617]/50 to-[#020617]"></div>
 
@@ -327,12 +334,11 @@ const Home = () => {
                     </p>
                     <Link to="/book" className="btn-primary inline-flex px-12 py-6 text-lg animate-pulse-glow shadow-2xl shadow-yellow-500/20">
                         <span>Book a Court</span>
-                        <ArrowRight className="w-6 h-6 ml-2" />
                     </Link>
                 </div>
-            </section>
+            </section >
 
-        </div>
+        </div >
     );
 };
 

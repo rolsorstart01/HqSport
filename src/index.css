@@ -1,54 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ========================================
-   HQ SPORT - ULTRA PREMIUM DESIGN SYSTEM
+   HQ SPORT - HYPER-LUXURY DESIGN SYSTEM V2
    ======================================== */
 
-/* Premium Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+/* 1. Typography: Outfit (Geometric Luxury) + Inter (Legibility) */
 
-/* GLOBAL CRITICAL STYLES (Forced) */
+
+/* 2. CRITICAL FORCED STYLES (Do Not Remove) */
 .text-gold-gradient {
-  background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728) !important;
+  background: linear-gradient(135deg, #FFE5A0 0%, #D4AF37 40%, #B8860B 70%, #996515 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
   color: transparent !important;
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
 }
 
-@keyframes shine {
-  0% {
-    left: -100%;
-  }
-
-  100% {
-    left: 100%;
-  }
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #FFE5A0 0%, #D4AF37 50%, #B8860B 100%) !important;
 }
 
-.animate-shine {
-  animation: shine 3s infinite !important;
-}
-
-.bg-noise {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 50;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-/* Base Styles */
+/* 3. Base Layer */
 @layer base {
   :root {
-    --font-primary: 'Inter', system-ui, sans-serif;
-    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Outfit', system-ui, sans-serif;
+    --color-bg-deep: #020408;
+    /* Darker than slate-950 */
   }
 
   html {
@@ -56,15 +39,11 @@
   }
 
   body {
-    @apply bg-[#020617] text-slate-200 overflow-x-hidden antialiased;
-    font-family: var(--font-primary);
-    cursor: default;
-  }
-
-  /* Add Noise Texture to Body */
-  body::after {
-    content: "";
-    @apply bg-noise;
+    @apply bg-[#020408] text-slate-200 antialiased overflow-x-hidden;
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08), transparent 70%),
+      radial-gradient(circle at 80% 60%, rgba(21, 50, 250, 0.05), transparent 50%);
   }
 
   h1,
@@ -74,88 +53,124 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    @apply font-bold leading-tight -tracking-wide;
+    @apply font-bold tracking-tight text-white;
   }
 }
 
-/* Components Layer */
+/* 4. Component Layer - The "Cinematic" Styles */
 @layer components {
 
-  /* Glassmorphism Card */
+  /* GLASS CARD V2: The "Obsidian Monolith" Look (Sharpened) */
   .glass-card {
-    @apply bg-[#0f172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl transition-all duration-500 relative overflow-hidden;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    @apply relative overflow-hidden bg-[#0A0F1C]/70 backdrop-blur-2xl border border-white/5 rounded-3xl transition-all duration-500;
   }
 
-  .glass-card::before {
+  /* Inner rim light */
+  .glass-card::after {
     content: "";
-    @apply absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    @apply absolute inset-0 rounded-3xl border border-white/5 pointer-events-none;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
   }
 
+  /* Hover State */
   .glass-card:hover {
-    @apply bg-[#1e293b]/70 border-yellow-500/30 -translate-y-2;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(250, 204, 21, 0.1);
+    @apply border-yellow-500/30 transform -translate-y-2 bg-[#0A0F1C]/80;
+    box-shadow:
+      0 20px 50px -10px rgba(0, 0, 0, 0.7),
+      0 0 30px rgba(212, 175, 55, 0.1);
   }
 
-  /* Buttons */
+  /* BUTTONS: "Gold Ingot" Style (Rounded) */
   .btn-primary {
-    @apply relative overflow-hidden bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-black font-bold rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-yellow-900/20 flex items-center justify-center gap-2 px-8 py-4 whitespace-nowrap;
+    @apply relative overflow-hidden flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#D4AF37] via-[#FCEFA4] to-[#B8860B] text-black font-extrabold font-display uppercase tracking-wider rounded-full shadow-xl shadow-yellow-900/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-yellow-500/30;
   }
 
-  /* Shine effect for primary button */
-  .btn-primary::after {
+  /* Specular Highlight on Button */
+  .btn-primary::before {
     content: "";
-    @apply absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] animate-shine;
+    @apply absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-50 pointer-events-none;
   }
 
   .btn-secondary {
-    @apply relative overflow-hidden border border-[#bf953f]/50 text-[#fcf6ba] font-bold rounded-xl hover:bg-[#bf953f]/10 transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 px-8 py-4 whitespace-nowrap;
+    @apply relative overflow-hidden flex items-center justify-center gap-3 px-8 py-4 bg-white/5 border border-yellow-500/30 text-yellow-100 font-bold font-display uppercase tracking-wider rounded-full backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-yellow-400/50 hover:text-white active:scale-95;
   }
 
-  /* Form Elements */
+  /* INPUTS: "Stealth" Style */
   .input-field {
-    @apply w-full px-5 py-4 text-base text-white bg-[#0f172a] border border-slate-700/50 rounded-2xl outline-none transition-all duration-300;
-  }
-
-  .input-field:focus {
-    @apply border-yellow-400 ring-2 ring-yellow-400/10;
-  }
-
-  /* Modals */
-  .modal-overlay {
-    @apply fixed inset-0 bg-[#020617]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4;
-  }
-
-  .modal-content {
-    @apply bg-[#0f172a] border border-slate-700/50 rounded-3xl w-full max-w-[450px] relative shadow-2xl overflow-y-auto max-h-[90vh];
+    @apply w-full px-6 py-4 bg-[#050912] border border-white/10 rounded-xl text-white placeholder-slate-600 outline-none transition-all duration-300 focus:border-yellow-500/50 focus:bg-[#0A0F1C] focus:shadow-[0_0_20px_rgba(212, 175, 55, 0.1)];
   }
 }
 
-/* Utilities Layer */
+/* 5. Utility Layer - Lighting & Effects */
 @layer utilities {
 
-  /* Legacy mapping support */
-  .text-yellow-gradient {
-    @apply text-gold-gradient;
+  /* Text Utilities */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   }
 
-  .grid-bg {
-    background-image:
-      linear-gradient(rgba(250, 204, 21, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(250, 204, 21, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
+  .text-shadow-glow {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
   }
 
-  .radial-glow {
-    background: radial-gradient(ellipse at center, rgba(250, 204, 21, 0.08) 0%, transparent 70%);
+  /* Gradients */
+  .mask-gradient-bottom {
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
   }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .mask-gradient-right {
+    mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
 
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* Animations */
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
   }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-gold {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+    }
+
+    70% {
+      box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+    }
+  }
+
+  .animate-pulse-gold {
+    animation: pulse-gold 2s infinite;
+  }
+}
+
+/* 6. Vendor Overrides */
+/* Hide Scrollbar but allow scrolling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020408;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
