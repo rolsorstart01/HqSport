@@ -170,7 +170,7 @@ const AppContent = () => {
 // Root App Component
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/HqSport">
       <AuthProvider>
         <AppContent />
       </AuthProvider>
