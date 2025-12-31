@@ -11,7 +11,7 @@ const Footer = () => {
                     {/* Brand */}
                     <div>
                         <Link to="/" className="inline-block mb-6">
-                            <img src="/logo.png" alt="HQ Sport" className="h-12" />
+                            <img src="logo.png" alt="HQ Sport" className="h-12" />
                         </Link>
                         <p className="text-slate-400 text-sm leading-relaxed mb-6">
                             Kolkata's premier rooftop pickleball destination. Experience world-class courts and stunning city views.

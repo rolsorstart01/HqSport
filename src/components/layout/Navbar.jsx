@@ -50,7 +50,7 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 shrink-0">
                     <Link to="/" className="flex items-center">
                         <img
-                            src="/logo.png"
+                            src="logo.png"
                             alt="HQ Sport"
                             className="h-12 md:h-16 w-auto"
                         />
