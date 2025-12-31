@@ -14,6 +14,9 @@ import SignupModal from './components/auth/SignupModal';
 // Chatbot
 import ChatWidget from './components/chatbot/ChatWidget';
 
+// PWA Install Component
+import InstallApp from './components/InstallApp';
+
 // Pages
 import Home from './pages/Home';
 import Book from './pages/Book';
@@ -129,7 +132,6 @@ const AppContent = () => {
             path="/refund"
             element={<Refund />}
           />
-          {/* Admin Route */}
           <Route
             path="/admin"
             element={
@@ -138,19 +140,17 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
-          {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      {/* Footer */}
+      {/* Footer & Floating Widgets */}
       <Footer />
-
-      {/* Floating Social Buttons */}
       <FloatingButtons />
-
-      {/* AI Chatbot Widget */}
       <ChatWidget />
+
+      {/* PWA Install Prompt - Added here to ensure it sits on top */}
+      <InstallApp />
 
       {/* Auth Modals */}
       <LoginModal
