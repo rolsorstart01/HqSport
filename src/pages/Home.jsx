@@ -240,9 +240,11 @@ const Home = () => {
                                 <div className="text-5xl font-bold text-white mb-2">₹250</div>
                                 <div className="text-slate-500 text-lg">per hour</div>
                             </div>
-                            <p className="text-slate-400 text-base">Pro Paddle Rental</p>
+                            <p className="text-slate-400 text-base">Pro Paddle Rental
+                                <br />
+                                (Available on site.)</p>
                         </div>
-                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Add to Booking</Link>
+                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Book Now</Link>
                     </div>
                 </div>
             </section>

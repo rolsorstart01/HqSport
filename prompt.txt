@@ -1,0 +1,6 @@
+add the banning feature in the admin panel if people abuse or do something wrong,
+ i still cant delete discounts,
+  make the broadcasts work, 
+  remove the gallery button from the admin panel
+   and in pricing remove the button for add to rental Pro Paddle Rental
+    and instead write on site availability.
