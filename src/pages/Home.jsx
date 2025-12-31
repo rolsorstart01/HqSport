@@ -162,7 +162,7 @@ const Home = () => {
                             <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500/20 to-blue-500/10 rounded-3xl blur-2xl animate-pulse-slow"></div>
                             <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl skew-y-1 transform transition hover:skew-y-0 duration-500">
                                 <img
-                                    src="/a916fd8f-8849-48e9-a74d-ec4b3b56767a.png"
+                                    src="a916fd8f-8849-48e9-a74d-ec4b3b56767a.png"
                                     alt="HQ Sport Courts"
                                     className="w-full hover:scale-105 transition-transform duration-700"
                                 />

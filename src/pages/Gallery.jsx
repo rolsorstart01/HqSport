@@ -9,7 +9,7 @@ const Gallery = () => {
 
     // Default images including venue photo
     const defaultImages = [
-        { id: 1, url: '/a916fd8f-8849-48e9-a74d-ec4b3b56767a.png', caption: 'Our Premium Courts' },
+        { id: 1, url: 'a916fd8f-8849-48e9-a74d-ec4b3b56767a.png', caption: 'Our Premium Courts' },
     ];
 
     useEffect(() => {
