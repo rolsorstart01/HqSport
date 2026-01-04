@@ -23,6 +23,17 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
         setProfileOpen(false);
     }, [location]);
 
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Book', path: '/book' },
@@ -34,7 +45,7 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50">
             {/* Main Navbar Bar */}
-            <div className={`transition-all duration-300 ${scrolled
+            <div className={`relative z-50 transition-all duration-300 ${scrolled
                 ? 'py-3 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-black/50'
                 : 'py-5 bg-gradient-to-b from-[#020617]/90 to-transparent'
                 }`}>
@@ -43,7 +54,7 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
                     {/* Mobile Toggle */}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="xl:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors z-50"
+                        className="xl:hidden p-2 relative rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors z-50"
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
