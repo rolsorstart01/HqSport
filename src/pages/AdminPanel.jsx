@@ -227,7 +227,6 @@ const AdminPanel = () => {
         { id: 'discounts', label: 'Discounts', icon: Tag },
         { id: 'users', label: 'Users', icon: Users },
         { id: 'broadcast', label: 'Broadcast', icon: MessageSquare },
-        { id: 'gallery', label: 'Gallery', icon: Image },
     ];
 
     return (
@@ -681,28 +680,6 @@ const AdminPanel = () => {
                             </div>
                         )}
 
-                        {/* Gallery Tab */}
-                        {activeTab === 'gallery' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {gallery.map((image) => (
-                                        <div key={image.id} className="relative group rounded-xl overflow-hidden">
-                                            <img
-                                                src={image.url}
-                                                alt={image.caption || 'Gallery image'}
-                                                className="w-full aspect-square object-cover"
-                                            />
-                                            <button
-                                                onClick={() => handleDeleteImage(image.id)}
-                                                className="absolute top-2 right-2 p-2 rounded-lg bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </>
                 )}
             </div>

@@ -133,6 +133,31 @@ const Book = ({ onLoginRequired }) => {
             slots: selectedSlots
         };
 
+        // Handle 100% discount (zero amount)
+        if (totalAmount === 0) {
+            const { id, error: bookingError } = await createBooking({
+                userId: user.uid,
+                userEmail: user.email,
+                userName: userData?.displayName || user.email,
+                ...bookingDetails,
+                totalAmount: 0,
+                paidAmount: 0,
+                remainingAmount: 0,
+                paymentType: 'full',
+                paymentId: 'free_promo_code',
+                status: 'booked'
+            });
+
+            if (bookingError) {
+                setError('Booking failed. Please contact support.');
+            } else {
+                setBookingId(id);
+                setBookingComplete(true);
+            }
+            setLoading(false);
+            return;
+        }
+
         createPayment({
             amount: totalAmount,
             bookingDetails,

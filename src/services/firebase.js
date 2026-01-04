@@ -177,24 +177,65 @@ export const createBooking = async (bookingData) => {
             createdAt: serverTimestamp(),
             status: 'booked'
         });
+
+        // Update user stats if userId exists and isn't 'admin-created'
+        if (bookingData.userId && bookingData.userId !== 'admin-created') {
+            const userRef = doc(db, 'users', bookingData.userId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                const currentData = userSnap.data();
+                await updateDoc(userRef, {
+                    totalBookings: (currentData.totalBookings || 0) + 1,
+                    hoursPlayed: (currentData.hoursPlayed || 0) + (bookingData.slots?.length || 1)
+                });
+            }
+        }
+
         return { id: docRef.id, error: null };
     } catch (error) {
         return { id: null, error: error.message };
     }
 };
 
-export const getUserBookings = async (userId) => {
+export const getUserBookings = async (userId, userEmail) => {
     if (isDemoMode) {
         return { bookings: [], error: null };
     }
     try {
-        const q = query(
+        let bookings = [];
+
+        // Query by userId
+        const q1 = query(
             collection(db, 'bookings'),
             where('userId', '==', userId),
             orderBy('createdAt', 'desc')
         );
-        const snapshot = await getDocs(q);
-        const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snapshot1 = await getDocs(q1);
+        bookings = snapshot1.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Query by userEmail if provided and add unique ones
+        if (userEmail) {
+            const q2 = query(
+                collection(db, 'bookings'),
+                where('userEmail', '==', userEmail),
+                orderBy('createdAt', 'desc')
+            );
+            const snapshot2 = await getDocs(q2);
+            snapshot2.docs.forEach(doc => {
+                const data = { id: doc.id, ...doc.data() };
+                if (!bookings.some(b => b.id === data.id)) {
+                    bookings.push(data);
+                }
+            });
+
+            // Re-sort if we added more
+            bookings.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+        }
+
         return { bookings, error: null };
     } catch (error) {
         return { bookings: [], error: error.message };

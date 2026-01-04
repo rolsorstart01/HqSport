@@ -22,6 +22,13 @@ export const AuthProvider = ({ children }) => {
                 setUser(firebaseUser);
                 // Fetch additional user data from Firestore
                 const { data } = await getUserData(firebaseUser.uid);
+                if (data?.banned) {
+                    await logOut();
+                    setUser(null);
+                    setUserData(null);
+                    setLoading(false);
+                    return;
+                }
                 setUserData(data);
             } else {
                 setUser(null);

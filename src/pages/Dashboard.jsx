@@ -15,7 +15,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchBookings = async () => {
             if (user) {
-                const { bookings: userBookings } = await getUserBookings(user.uid);
+                const { bookings: userBookings } = await getUserBookings(user.uid, user.email);
                 if (userBookings) setBookings(userBookings);
             }
             setLoading(false);

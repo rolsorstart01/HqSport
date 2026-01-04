@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import FloatingButtons from './components/layout/FloatingButtons';
+import BroadcastBanner from './components/layout/BroadcastBanner';
 
 // Auth Components
 import LoginModal from './components/auth/LoginModal';
@@ -145,6 +146,7 @@ const AppContent = () => {
       </main>
 
       {/* Footer & Floating Widgets */}
+      <BroadcastBanner />
       <Footer />
       <FloatingButtons />
       <ChatWidget />
