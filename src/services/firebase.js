@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../config/firebase.config';
+import { sendBookingEmail } from './emailService';
 
 // Check if Firebase is properly configured
 const isFirebaseConfigured = () => {
@@ -80,6 +81,7 @@ export const signUpWithEmail = async (email, password, displayName) => {
             totalBookings: 0,
             profileComplete: false
         });
+
         return { user: result.user, error: null };
     } catch (error) {
         return { user: null, error: error.message };
@@ -505,6 +507,7 @@ export const cancelBooking = async (bookingId) => {
             status: 'cancelled',
             cancelledAt: serverTimestamp()
         });
+
         return { error: null };
     } catch (error) {
         return { error: error.message };

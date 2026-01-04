@@ -15,7 +15,7 @@ import {
 } from '../services/firebase';
 import { formatCurrency } from '../services/razorpay';
 import { toast } from 'react-hot-toast';
-import { sendBookingEmail } from '../services/emailService';
+import { sendBookingEmail, sendBookAgainEmail } from '../services/emailService';
 
 const AdminPanel = () => {
     const { user, isAdmin, isSuperAdmin } = useAuth();
