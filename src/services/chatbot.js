@@ -26,7 +26,8 @@ const facilityInfo = {
     contact: {
         instagram: '@hq.sportslab',
         email: 'hello@hqsport.in',
-        phone: '919876543210' // Placeholder for logic reference
+        whatsapp: '+1 2066788644',
+        phone: '2066788644'
     }
 };
 
@@ -101,12 +102,23 @@ const knowledgeBase = [
         response: "Pickleball is the world's fastest-growing sport—a perfect blend of tennis, badminton, and ping-pong. It's easy to learn but challenging to master. We welcome players of all levels, and our community is very beginner-friendly."
     },
 
-    // --- COACHING/EVENTS ---
     {
         id: 'coaching',
         keywords: ['coach', 'learn', 'training', 'train', 'class', 'lesson', 'event', 'tournament'],
         weight: 3,
         response: "We host regular clinics, community mixers, and tournaments. Check our **'Community'** page for upcoming events, or inquire at the desk for private coaching sessions."
+    },
+    {
+        id: 'legal',
+        keywords: ['privacy', 'terms', 'policy', 'condition', 'legal', 'refund policy'],
+        weight: 3,
+        response: "Transparency is key. You can find our Privacy Policy and Terms of Service linked at the bottom of the page. For refunds: Cancellations 24 hours prior get a full credit; same-day cancellations are non-refundable."
+    },
+    {
+        id: 'contact_direct',
+        keywords: ['contact', 'call', 'whatsapp', 'reach out', 'talk to human', 'support'],
+        weight: 5,
+        response: `Need human assistance? You can reach us via WhatsApp at **${facilityInfo.contact.whatsapp}** or call us at **${facilityInfo.contact.phone}**. You can also email us at **${facilityInfo.contact.email}**.`
     }
 ];
 

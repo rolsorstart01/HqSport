@@ -75,6 +75,7 @@ export const signUpWithEmail = async (email, password, displayName) => {
             displayName,
             createdAt: serverTimestamp(),
             role: 'user',
+            city: 'Calcutta',
             hoursPlayed: 0,
             totalBookings: 0,
             profileComplete: false
@@ -204,11 +205,10 @@ export const getUserBookings = async (userId, userEmail) => {
     try {
         let bookings = [];
 
-        // Query by userId
+        // Query by userId - removed orderBy to avoid index requirement
         const q1 = query(
             collection(db, 'bookings'),
-            where('userId', '==', userId),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', userId)
         );
         const snapshot1 = await getDocs(q1);
         bookings = snapshot1.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -217,8 +217,7 @@ export const getUserBookings = async (userId, userEmail) => {
         if (userEmail) {
             const q2 = query(
                 collection(db, 'bookings'),
-                where('userEmail', '==', userEmail),
-                orderBy('createdAt', 'desc')
+                where('userEmail', '==', userEmail)
             );
             const snapshot2 = await getDocs(q2);
             snapshot2.docs.forEach(doc => {
@@ -227,17 +226,20 @@ export const getUserBookings = async (userId, userEmail) => {
                     bookings.push(data);
                 }
             });
-
-            // Re-sort if we added more
-            bookings.sort((a, b) => {
-                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-                return dateB - dateA;
-            });
         }
+
+        // Always sort client-side to ensure consistent order
+        bookings.sort((a, b) => {
+            const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() :
+                (a.date ? new Date(a.date).getTime() : 0);
+            const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() :
+                (b.date ? new Date(b.date).getTime() : 0);
+            return timeB - timeA;
+        });
 
         return { bookings, error: null };
     } catch (error) {
+        console.error('Error fetching user bookings:', error);
         return { bookings: [], error: error.message };
     }
 };

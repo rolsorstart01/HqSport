@@ -3,7 +3,7 @@ import { format, parseISO, isToday, isBefore, isAfter } from 'date-fns';
 import {
     Shield, Users, Calendar, MessageSquare, Image, TrendingUp,
     ChevronRight, Send, Trash2, UserPlus, UserMinus, RefreshCw,
-    AlertCircle, Check, X, Tag, Plus, User, CreditCard
+    AlertCircle, Check, X, Tag, Plus, User, CreditCard, Download, Megaphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,9 +15,10 @@ import {
 } from '../services/firebase';
 import { formatCurrency } from '../services/razorpay';
 import { toast } from 'react-hot-toast';
+import { sendBookingEmail } from '../services/emailService';
 
 const AdminPanel = () => {
-    const { user, isSuperAdmin } = useAuth();
+    const { user, isAdmin, isSuperAdmin } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
 
     // Data States
@@ -147,9 +148,10 @@ const AdminPanel = () => {
 
     const handleCancelBooking = async (bookingId) => {
         if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+        setLoading(true);
         await cancelBooking(bookingId);
         toast.success("Booking cancelled");
-        fetchData();
+        setLoading(false);
     };
 
     const handleCreateDiscount = async (e) => {
@@ -170,40 +172,95 @@ const AdminPanel = () => {
 
     const handleManualBooking = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        // Find user if exists
-        const existingUser = users.find(u => u.email === manualBooking.userEmail);
+        try {
+            // Check if slot is already taken
+            const { bookings: existingBookings } = await getBookingsForDate(manualBooking.date);
+            const isTaken = existingBookings.some(b =>
+                b.status !== 'cancelled' &&
+                parseInt(b.courtId) === parseInt(manualBooking.courtId) &&
+                (b.slot === manualBooking.timeSlot || (b.slots && b.slots.includes(`slot-${parseInt(manualBooking.timeSlot)}`)))
+            );
 
-        const bookingData = {
-            userId: existingUser ? existingUser.id : 'admin-created',
-            userEmail: manualBooking.userEmail,
-            userName: manualBooking.userName || (existingUser ? existingUser.displayName : 'Admin Booking'),
-            courtId: parseInt(manualBooking.courtId),
-            date: manualBooking.date,
-            slot: manualBooking.timeSlot,
-            totalAmount: parseInt(manualBooking.amount),
-            paidAmount: manualBooking.paid ? parseInt(manualBooking.amount) : 0,
-            remainingAmount: manualBooking.paid ? 0 : parseInt(manualBooking.amount),
-            status: 'booked',
-            paymentId: manualBooking.paid ? 'manual_admin_entry' : null
-        };
+            if (isTaken) {
+                toast.error("This slot is already booked!");
+                setLoading(false);
+                return;
+            }
 
-        const result = await createBooking(bookingData);
-        if (result.error) {
-            toast.error(result.error);
-        } else {
-            toast.success("Manual booking created successfully");
-            setManualBooking({
-                userEmail: '',
-                userName: '',
-                courtId: 1,
-                date: format(new Date(), 'yyyy-MM-dd'),
-                timeSlot: '07:00',
-                amount: 800,
-                paid: true
-            });
-            fetchData();
+            // Find user if exists
+            const existingUser = users.find(u => u.email.toLowerCase() === manualBooking.userEmail.toLowerCase());
+
+            const bookingData = {
+                userId: existingUser ? existingUser.id : 'admin-created',
+                userEmail: manualBooking.userEmail,
+                userName: manualBooking.userName || (existingUser ? existingUser.displayName : 'Admin Booking'),
+                courtId: parseInt(manualBooking.courtId),
+                date: manualBooking.date,
+                slot: manualBooking.timeSlot,
+                slots: [`slot-${parseInt(manualBooking.timeSlot)}`],
+                totalAmount: parseInt(manualBooking.amount),
+                paidAmount: manualBooking.paid ? parseInt(manualBooking.amount) : 0,
+                remainingAmount: manualBooking.paid ? 0 : parseInt(manualBooking.amount),
+                status: 'booked',
+                paymentId: manualBooking.paid ? 'manual_admin_entry' : null
+            };
+
+            const result = await createBooking(bookingData);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Manual booking created successfully");
+
+                // Send Email
+                sendBookingEmail(bookingData);
+
+                setManualBooking({
+                    userEmail: '',
+                    userName: '',
+                    courtId: 1,
+                    date: format(new Date(), 'yyyy-MM-dd'),
+                    timeSlot: '07:00',
+                    amount: 800,
+                    paid: true
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to create booking");
         }
+        setLoading(false);
+    };
+
+    const handleExportUsers = () => {
+        // Filter users by city if you want, but here we export all (most are Calcutta)
+        const calcuttaUsers = users.filter(u => u.city === 'Calcutta' || !u.city);
+
+        const headers = ['Name', 'Email', 'Role', 'City', 'Bookings'];
+        const rows = calcuttaUsers.map(u => [
+            u.displayName || 'N/A',
+            u.email,
+            u.role || 'user',
+            u.city || 'Calcutta',
+            u.totalBookings || 0
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `hq_sport_users_calcutta_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("User list exported for Calcutta!");
     };
 
     // Stats
@@ -227,6 +284,7 @@ const AdminPanel = () => {
         { id: 'discounts', label: 'Discounts', icon: Tag },
         { id: 'users', label: 'Users', icon: Users },
         { id: 'broadcast', label: 'Broadcast', icon: MessageSquare },
+        { id: 'marketing', label: 'Marketing', icon: Megaphone },
     ];
 
     return (
@@ -556,7 +614,7 @@ const AdminPanel = () => {
                                             <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Role</th>
                                             <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Status</th>
                                             <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Bookings</th>
-                                            {isSuperAdmin && (
+                                            {isAdmin && (
                                                 <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Actions</th>
                                             )}
                                         </tr>
@@ -592,7 +650,7 @@ const AdminPanel = () => {
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-4 text-gray-300">{u.totalBookings || 0}</td>
-                                                {isSuperAdmin && u.id !== user?.uid && (
+                                                {isAdmin && u.id !== user?.uid && (
                                                     <td className="py-3 px-4">
                                                         <div className="flex items-center gap-2">
                                                             {u.role === 'admin' ? (
@@ -676,6 +734,78 @@ const AdminPanel = () => {
                                             ))}
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Marketing Tab */}
+                        {activeTab === 'marketing' && (
+                            <div className="space-y-8 animate-fade-in">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Email Marketing Card */}
+                                    <div className="card p-6 border-l-4 border-yellow-500">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500">
+                                                <Download className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-white">Target Calcutta Users</h3>
+                                        </div>
+                                        <p className="text-gray-400 text-sm mb-6">
+                                            Download your user list as a CSV. You can upload this to free tools like
+                                            <span className="text-yellow-400"> Brevo</span> or
+                                            <span className="text-yellow-400"> MailerLite</span> to send marketing emails to your local audience for free.
+                                        </p>
+                                        <button
+                                            onClick={handleExportUsers}
+                                            className="btn-gold w-full flex items-center justify-center gap-2"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Export .CSV (Calcutta Only)
+                                        </button>
+                                    </div>
+
+                                    {/* Local SEO Card */}
+                                    <div className="card p-6 border-l-4 border-green-500">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
+                                                <TrendingUp className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-white">Free Local Marketing Guide</h3>
+                                        </div>
+                                        <ul className="space-y-3 text-sm text-gray-400">
+                                            <li className="flex gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                                                <span>**Google Business Profile**: Essential for "Pickleball in Calcutta" searches.</span>
+                                            </li>
+                                            <li className="flex gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                                                <span>**WhatsApp Status**: Share local discounts for morning slots.</span>
+                                            </li>
+                                            <li className="flex gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                                                <span>**Instagram Collabs**: Tag local athletic influencers in Calcutta.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Marketing Tips */}
+                                <div className="card bg-zinc-900/50 p-6 border border-zinc-800">
+                                    <h4 className="text-white font-medium mb-4">Why use this list for free marketing?</h4>
+                                    <div className="grid md:grid-cols-3 gap-6 text-xs text-gray-500">
+                                        <div>
+                                            <p className="font-bold text-gray-400 mb-1">Targeted</p>
+                                            Every user in this list has already shown interest in HQ Sport.
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-400 mb-1">Cost Effective</p>
+                                            Using CSV exports keeps your costs at exactly ₹0.
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-400 mb-1">Spam Protection</p>
+                                            Tools like Brevo ensure your emails actually land in the "Inbox".
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}

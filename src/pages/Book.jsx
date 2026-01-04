@@ -8,6 +8,7 @@ import TimeSlotPicker from '../components/booking/TimeSlotPicker';
 import { useAuth } from '../context/AuthContext';
 import { createBooking, getBookingsForDate, getDiscounts } from '../services/firebase';
 import { createPayment, formatCurrency } from '../services/razorpay';
+import { sendBookingEmail } from '../services/emailService';
 
 const Book = ({ onLoginRequired }) => {
     const navigate = useNavigate();
@@ -133,6 +134,24 @@ const Book = ({ onLoginRequired }) => {
             slots: selectedSlots
         };
 
+        // Double check availability before payment
+        try {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
+            const { bookings } = await getBookingsForDate(dateStr);
+            const slotsForCourt = bookings
+                .filter(b => b.status !== 'cancelled' && b.courtId === selectedCourt)
+                .flatMap(b => b.slots || []);
+
+            const isTaken = selectedSlots.some(slot => slotsForCourt.includes(slot));
+            if (isTaken) {
+                setError('One or more selected slots just became unavailable. Please choose another time.');
+                setLoading(false);
+                return;
+            }
+        } catch (err) {
+            console.error("Availability check failed:", err);
+        }
+
         // Handle 100% discount (zero amount)
         if (totalAmount === 0) {
             const { id, error: bookingError } = await createBooking({
@@ -181,6 +200,18 @@ const Book = ({ onLoginRequired }) => {
                 } else {
                     setBookingId(id);
                     setBookingComplete(true);
+
+                    // Send Email
+                    sendBookingEmail({
+                        userId: user.uid,
+                        userEmail: user.email,
+                        userName: userData?.displayName || user.email,
+                        ...bookingDetails,
+                        totalAmount,
+                        paidAmount: paymentData.amount,
+                        paymentId: paymentData.paymentId,
+                        status: 'booked'
+                    });
                 }
                 setLoading(false);
             },
