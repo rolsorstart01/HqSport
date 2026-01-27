@@ -13,7 +13,6 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
         <svg viewBox="0 0 40 50" className="w-8 h-8" fill="currentColor">
             <ellipse cx="20" cy="18" rx="14" ry="16" className="text-current" />
             <rect x="16" y="32" width="8" height="12" rx="2" className="text-current" />
-            {/* Holes */}
             <circle cx="14" cy="14" r="2" className="text-zinc-900" />
             <circle cx="20" cy="10" r="2" className="text-zinc-900" />
             <circle cx="26" cy="14" r="2" className="text-zinc-900" />
@@ -90,7 +89,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                 })}
             </div>
 
-            {/* Court layout visualization - Updated to straight line */}
+            {/* Court layout visualization */}
             <div className="mt-8 pt-6 border-t border-zinc-800">
                 <p className="text-sm text-gray-500 mb-4">Court Layout</p>
                 <div className="flex flex-row justify-between gap-2 overflow-x-auto pb-2">
@@ -99,23 +98,22 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                         const isSelected = selectedCourt === court.id;
 
                         return (
-                            <div
+                            <button
                                 key={court.id}
+                                onClick={() => !isBooked && onCourtSelect(court.id)}
+                                disabled={isBooked}
                                 className={`
-                                    relative flex-1 min-w-[60px] aspect-[2/3] rounded-md border-2 flex items-center justify-center text-sm font-medium transition-colors
+                                    relative flex-1 min-w-[60px] aspect-[2/3] rounded-md border-2 flex items-center justify-center text-sm font-medium transition-all
                                     ${isBooked
-                                        ? 'bg-red-500/10 border-red-500/30 text-red-400 opacity-40'
+                                        ? 'bg-red-500/10 border-red-500/30 text-red-400 opacity-40 cursor-not-allowed'
                                         : isSelected
-                                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-gray-500'
+                                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400 scale-105 z-10'
+                                            : 'bg-zinc-900 border-zinc-700 text-gray-500 hover:border-zinc-500'
                                     }
                                 `}
                             >
-                                {/* Visual Net Line */}
-                                <div className={`absolute w-full h-[1px] top-1/2 left-0 ${isSelected ? 'bg-yellow-500/40' : 'bg-zinc-700'}`} />
-
-                                <span className="relative z-10">{court.id}</span>
-                            </div>
+                                <span className="relative">{court.id}</span>
+                            </button>
                         );
                     })}
                 </div>
