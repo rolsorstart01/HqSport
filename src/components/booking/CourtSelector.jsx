@@ -63,21 +63,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                                 {court.name}
                             </h4>
 
-                            <p className="text-sm text-gray-500 capitalize mb-3">{court.type}</p>
-
-                            <div className="flex flex-wrap gap-2">
-                                {court.features.map((feature, index) => (
-                                    <span
-                                        key={index}
-                                        className={`text-xs px-2 py-1 rounded-md ${isSelected
-                                            ? 'bg-yellow-500/20 text-yellow-400'
-                                            : 'bg-zinc-800 text-gray-400'
-                                            }`}
-                                    >
-                                        {feature}
-                                    </span>
-                                ))}
-                            </div>
+                            <p className="text-sm text-gray-500 capitalize">{court.type}</p>
 
                             {isBooked && (
                                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
@@ -89,7 +75,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                 })}
             </div>
 
-            {/* Court layout visualization */}
+            {/* Court layout visualization - Interactive straight line */}
             <div className="mt-8 pt-6 border-t border-zinc-800">
                 <p className="text-sm text-gray-500 mb-4">Court Layout</p>
                 <div className="flex flex-row justify-between gap-2 overflow-x-auto pb-2">
@@ -103,7 +89,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                                 onClick={() => !isBooked && onCourtSelect(court.id)}
                                 disabled={isBooked}
                                 className={`
-                                    relative flex-1 min-w-[60px] aspect-[2/3] rounded-md border-2 flex items-center justify-center text-sm font-medium transition-all
+                                    relative flex-1 min-w-[60px] aspect-[2/3] rounded-md border-2 flex items-center justify-center text-sm font-medium transition-colors
                                     ${isBooked
                                         ? 'bg-red-500/10 border-red-500/30 text-red-400 opacity-40 cursor-not-allowed'
                                         : isSelected
@@ -112,7 +98,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                                     }
                                 `}
                             >
-                                <span className="relative">{court.id}</span>
+                                <span>{court.id}</span>
                             </button>
                         );
                     })}
