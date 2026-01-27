@@ -41,43 +41,38 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                             onClick={() => !isBooked && onCourtSelect(court.id)}
                             disabled={isBooked}
                             className={`
-                relative p-6 rounded-2xl border-2 transition-all duration-300 text-left
-                ${isBooked
+                                relative p-6 rounded-2xl border-2 transition-all duration-300 text-left
+                                ${isBooked
                                     ? 'bg-zinc-900 border-zinc-800 opacity-50 cursor-not-allowed'
                                     : isSelected
                                         ? 'bg-yellow-500/10 border-yellow-500 shadow-lg shadow-yellow-500/10'
                                         : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
                                 }
-              `}
+                            `}
                         >
-                            {/* Selection indicator */}
                             {isSelected && (
                                 <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
                                     <Check className="w-4 h-4 text-black" />
                                 </div>
                             )}
 
-                            {/* Court icon */}
                             <div className={`mb-4 ${isSelected ? 'text-yellow-400' : isBooked ? 'text-gray-600' : 'text-gray-400'}`}>
                                 <PaddleIcon />
                             </div>
 
-                            {/* Court name */}
                             <h4 className={`text-lg font-semibold mb-1 ${isSelected ? 'text-yellow-400' : 'text-white'}`}>
                                 {court.name}
                             </h4>
 
-                            {/* Court type */}
                             <p className="text-sm text-gray-500 capitalize mb-3">{court.type}</p>
 
-                            {/* Features */}
                             <div className="flex flex-wrap gap-2">
                                 {court.features.map((feature, index) => (
                                     <span
                                         key={index}
                                         className={`text-xs px-2 py-1 rounded-md ${isSelected
-                                                ? 'bg-yellow-500/20 text-yellow-400'
-                                                : 'bg-zinc-800 text-gray-400'
+                                            ? 'bg-yellow-500/20 text-yellow-400'
+                                            : 'bg-zinc-800 text-gray-400'
                                             }`}
                                     >
                                         {feature}
@@ -85,7 +80,6 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                                 ))}
                             </div>
 
-                            {/* Booked indicator */}
                             {isBooked && (
                                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
                                     <span className="text-red-400 font-medium text-sm">Booked</span>
@@ -96,10 +90,10 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                 })}
             </div>
 
-            {/* Court layout visualization */}
-            <div className="mt-6 pt-6 border-t border-zinc-800">
+            {/* Court layout visualization - Updated to straight line */}
+            <div className="mt-8 pt-6 border-t border-zinc-800">
                 <p className="text-sm text-gray-500 mb-4">Court Layout</p>
-                <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                <div className="flex flex-row justify-between gap-2 overflow-x-auto pb-2">
                     {courts.map((court) => {
                         const isBooked = bookedCourts.includes(court.id);
                         const isSelected = selectedCourt === court.id;
@@ -108,21 +102,26 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                             <div
                                 key={court.id}
                                 className={`
-                  aspect-[3/4] rounded-lg border-2 flex items-center justify-center text-sm font-medium
-                  ${isBooked
-                                        ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                    relative flex-1 min-w-[60px] aspect-[2/3] rounded-md border-2 flex items-center justify-center text-sm font-medium transition-colors
+                                    ${isBooked
+                                        ? 'bg-red-500/10 border-red-500/30 text-red-400 opacity-40'
                                         : isSelected
                                             ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-gray-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-gray-500'
                                     }
-                `}
+                                `}
                             >
-                                {court.id}
+                                {/* Visual Net Line */}
+                                <div className={`absolute w-full h-[1px] top-1/2 left-0 ${isSelected ? 'bg-yellow-500/40' : 'bg-zinc-700'}`} />
+
+                                <span className="relative z-10">{court.id}</span>
                             </div>
                         );
                     })}
                 </div>
-                <p className="text-xs text-gray-600 text-center mt-3">View from rooftop entrance</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-600 text-center mt-4">
+                    View from rooftop entrance
+                </p>
             </div>
         </div>
     );
