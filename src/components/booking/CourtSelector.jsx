@@ -3,10 +3,10 @@ import { Check } from 'lucide-react';
 
 const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
     const courts = [
-        { id: 1, name: 'Court 1', type: 'outdoor', features: ['Premium Surface', 'Night Lights'] },
-        { id: 2, name: 'Court 2', type: 'outdoor', features: ['Premium Surface', 'Night Lights'] },
-        { id: 3, name: 'Court 3', type: 'outdoor', features: ['Premium Surface', 'City View'] },
-        { id: 4, name: 'Court 4', type: 'outdoor', features: ['Premium Surface', 'City View'] },
+        { id: 1, name: 'Court 1', type: 'outdoor' },
+        { id: 2, name: 'Court 2', type: 'outdoor' },
+        { id: 3, name: 'Court 3', type: 'outdoor' },
+        { id: 4, name: 'Court 4', type: 'outdoor' },
     ];
 
     const PaddleIcon = () => (
@@ -107,7 +107,7 @@ const CourtSelector = ({ selectedCourt, onCourtSelect, bookedCourts = [] }) => {
                                     ${isBooked
                                         ? 'bg-red-500/10 border-red-500/30 text-red-400 opacity-40 cursor-not-allowed'
                                         : isSelected
-                                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400 scale-105 z-10'
+                                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400 z-10'
                                             : 'bg-zinc-900 border-zinc-700 text-gray-500 hover:border-zinc-500'
                                     }
                                 `}
