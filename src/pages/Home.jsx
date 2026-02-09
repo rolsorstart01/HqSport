@@ -28,8 +28,6 @@ const Home = () => {
     const amenities = [
         { icon: <Coffee className="w-6 h-6" />, name: "Glenburn Cafe", desc: "Premium refreshments" },
         { icon: <Wifi className="w-6 h-6" />, name: "Free WiFi", desc: "High-speed connectivity" },
-        { icon: <Car className="w-6 h-6" />, name: "Valet Parking", desc: "Complimentary service" },
-        { icon: <Star className="w-6 h-6" />, name: "Pro Equipment", desc: "Paddle rentals available" },
     ];
 
     return (
@@ -227,24 +225,6 @@ const Home = () => {
                             <p className="text-slate-300 text-lg">1:00 PM — 12:00 AM</p>
                         </div>
                         <Link to="/book" className="btn-primary w-full justify-center py-4 text-lg shadow-xl shadow-yellow-500/20 mt-12">Book Now</Link>
-                    </div>
-
-                    {/* Paddle Rental */}
-                    <div className="glass-card p-12 flex flex-col items-center text-center hover:bg-white/5 transition-colors h-full">
-                        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-                            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium">
-                                <Trophy className="w-4 h-4" />
-                                Equipment
-                            </div>
-                            <div>
-                                <div className="text-5xl font-bold text-white mb-2">₹250</div>
-                                <div className="text-slate-500 text-lg">per hour</div>
-                            </div>
-                            <p className="text-slate-400 text-base">Pro Paddle Rental
-                                <br />
-                                (Available on site.)</p>
-                        </div>
-                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Book Now</Link>
                     </div>
                 </div>
             </section>

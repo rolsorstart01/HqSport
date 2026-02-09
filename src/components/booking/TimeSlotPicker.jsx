@@ -16,8 +16,8 @@ const TimeSlotPicker = ({ selectedSlots, onSlotSelect, bookedSlots = [], selecte
             const endTime = endHour === 24 ? '00:00' : `${endHour.toString().padStart(2, '0')}:00`;
 
             // Price tier: ₹800 for 6 AM - 1 PM, ₹1200 for 1 PM - 12 AM
-            const price = hour < 13 ? 800 : 1200;
-            const tier = hour < 13 ? 'morning' : 'evening';
+            const price = 1500;
+            const tier = 'standard';
 
             // Check if slot is in the past (only for same-day bookings)
             const isPast = isBookingToday && hour <= currentHour;
@@ -77,12 +77,8 @@ const TimeSlotPicker = ({ selectedSlots, onSlotSelect, bookedSlots = [], selecte
             {/* Pricing legend */}
             <div className="flex items-center gap-6 mb-6 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <span className="text-sm text-gray-400">Morning (₹800)</span>
-                </div>
-                <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-sm text-gray-400">Evening (₹1200)</span>
+                    <span className="text-sm text-gray-400">Standard Rate (₹1,500)</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-gray-500"></div>
@@ -105,16 +101,14 @@ const TimeSlotPicker = ({ selectedSlots, onSlotSelect, bookedSlots = [], selecte
                             onClick={() => handleSlotClick(slot)}
                             disabled={isDisabled}
                             className={`
-                relative p-4 rounded-xl border transition-all duration-200
-                ${isDisabled
+                                relative p-4 rounded-xl border transition-all duration-200
+                                ${isDisabled
                                     ? 'bg-gray-500/10 border-gray-500/30 cursor-not-allowed opacity-50'
                                     : isSelected
                                         ? 'bg-yellow-500/20 border-yellow-500 shadow-lg shadow-yellow-500/10'
-                                        : isMorning
-                                            ? 'bg-zinc-900 border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/5'
-                                            : 'bg-zinc-900 border-zinc-800 hover:border-yellow-500/50 hover:bg-yellow-500/5'
+                                        : 'bg-zinc-900 border-zinc-800 hover:border-yellow-500/50 hover:bg-yellow-500/5'
                                 }
-              `}
+                            `}
                         >
                             {/* Selection check */}
                             {isSelected && !isBooked && (
@@ -149,7 +143,7 @@ const TimeSlotPicker = ({ selectedSlots, onSlotSelect, bookedSlots = [], selecte
                                         ? 'bg-emerald-500/20 text-emerald-400'
                                         : 'bg-yellow-500/20 text-yellow-400'
                                     }`}>
-                                    {isBooked ? 'Booked' : isMorning ? 'Morning' : 'Evening'}
+                                    {isBooked ? 'Booked' : 'Available'}
                                 </span>
                             </div>
                         </button>

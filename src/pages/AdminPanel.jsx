@@ -16,6 +16,8 @@ import {
 import { formatCurrency } from '../services/razorpay';
 import { toast } from 'react-hot-toast';
 import { sendBookingEmail, sendBookAgainEmail } from '../services/emailService';
+import { closeCourtsForDay, reopenCourtsForDay } from '../services/firebase';
+
 
 const AdminPanel = () => {
     const { user, isAdmin, isSuperAdmin } = useAuth();
@@ -46,6 +48,11 @@ const AdminPanel = () => {
         amount: 800,
         paid: true
     });
+    // Close Courts (Global)
+const [closedDate, setClosedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+const [closeReason, setCloseReason] = useState('Holiday');
+const [closingLoading, setClosingLoading] = useState(false);
+
 
     useEffect(() => {
         setLoading(true);
@@ -104,6 +111,37 @@ const AdminPanel = () => {
         }
         setLoading(false);
     };
+    const handleCloseCourtsForDay = async () => {
+  if (!closedDate || !closeReason) {
+    toast.error("Select date and reason");
+    return;
+  }
+
+  try {
+    setClosingLoading(true);
+    await closeCourtsForDay(closedDate, closeReason);
+    toast.success(`All courts closed for ${closedDate}`);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to close courts");
+  } finally {
+    setClosingLoading(false);
+  }
+};
+
+const handleReopenCourtsForDay = async () => {
+  try {
+    setClosingLoading(true);
+    await reopenCourtsForDay(closedDate);
+    toast.success(`Courts reopened for ${closedDate}`);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to reopen courts");
+  } finally {
+    setClosingLoading(false);
+  }
+};
+
 
     // Actions
     const handleRoleChange = async (userId, newRole) => {
@@ -262,6 +300,55 @@ const AdminPanel = () => {
         document.body.removeChild(link);
         toast.success("User list exported for Calcutta!");
     };
+    const [reportRange, setReportRange] = useState({
+    start: format(new Date(), 'yyyy-MM-dd'),
+    end: format(new Date(), 'yyyy-MM-dd')
+});
+
+const handleExportCustomReport = () => {
+    const startDate = parseISO(reportRange.start);
+    const endDate = parseISO(reportRange.end);
+    endDate.setHours(23, 59, 59, 999);
+
+    const filteredBookings = bookings.filter(b => {
+        if (b.status === 'cancelled') return false;
+        const bookingDate = parseISO(b.date);
+        // Check if date is within range (inclusive)
+        return (bookingDate >= startDate && bookingDate <= endDate);
+    });
+
+    if (filteredBookings.length === 0) {
+        toast.error("No bookings found for this range");
+        return;
+    }
+
+    const headers = ['Date', 'User Name', 'Email', 'Court', 'Time Slot', 'Amount Paid', 'Status'];
+    const rows = filteredBookings.map(b => [
+        b.date,
+        b.userName || 'N/A',
+        b.userEmail || 'N/A',
+        `Court ${b.courtId}`,
+        b.slot || 'N/A',
+        b.paidAmount || 0,
+        b.status
+    ]);
+
+    // Calculate total revenue for the footer of the CSV
+    const totalRev = filteredBookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+    rows.push(['', '', '', '', 'TOTAL REVENUE', totalRev, '']);
+
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `report_${reportRange.start}_to_${reportRange.end}.csv`);
+    link.click();
+    toast.success("Report downloaded successfully");
+};
 
     // Stats
     const now = new Date();
@@ -339,6 +426,63 @@ const AdminPanel = () => {
                             <div className="space-y-8 animate-fade-in">
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="card p-6 border-l-4 border-red-500">
+  <div className="flex items-center gap-3 mb-4">
+    <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
+      <AlertCircle className="w-5 h-5" />
+    </div>
+    <div>
+      <h3 className="text-lg font-semibold text-white">Close All Courts</h3>
+      <p className="text-xs text-gray-400">
+        Use this for holidays, renovation, or maintenance
+      </p>
+    </div>
+  </div>
+
+  <div className="grid md:grid-cols-3 gap-4 mb-4">
+    <div>
+      <label className="block text-xs text-gray-500 mb-1">Date</label>
+      <input
+        type="date"
+        value={closedDate}
+        onChange={(e) => setClosedDate(e.target.value)}
+        className="input-field w-full"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs text-gray-500 mb-1">Reason</label>
+      <select
+        value={closeReason}
+        onChange={(e) => setCloseReason(e.target.value)}
+        className="input-field w-full appearance-none bg-zinc-900"
+      >
+        <option value="Holiday">Holiday</option>
+        <option value="Renovation">Renovation</option>
+        <option value="Maintenance">Maintenance</option>
+      </select>
+    </div>
+
+    <div className="flex items-end gap-2">
+      <button
+        onClick={handleCloseCourtsForDay}
+        disabled={closingLoading}
+        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded"
+      >
+        {closingLoading ? "Closing..." : "Close Courts"}
+      </button>
+
+      <button
+        onClick={handleReopenCourtsForDay}
+        disabled={closingLoading}
+        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+      >
+        Reopen
+      </button>
+    </div>
+  </div>
+</div>
+
                                     <div className="card-gold">
                                         <p className="text-gray-400 text-sm mb-1">Total Users</p>
                                         <p className="text-3xl font-bold text-white">{users.length}</p>
@@ -356,6 +500,68 @@ const AdminPanel = () => {
                                         <p className="text-3xl font-bold text-green-400">{formatCurrency(totalRevenue)}</p>
                                     </div>
                                 </div>
+                                <div className="card p-6 border-l-4 border-yellow-500">
+    <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500">
+            <Calendar className="w-5 h-5" />
+        </div>
+        <div>
+            <h3 className="text-lg font-semibold text-white">Generate Custom Reports</h3>
+            <p className="text-gray-400 text-xs">Select dates to export booking data</p>
+        </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">From</label>
+            <input 
+                type="date" 
+                value={reportRange.start}
+                onChange={(e) => setReportRange({...reportRange, start: e.target.value})}
+                className="input-field w-full"
+            />
+        </div>
+        <div>
+            <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">To</label>
+            <input 
+                type="date" 
+                value={reportRange.end}
+                onChange={(e) => setReportRange({...reportRange, end: e.target.value})}
+                className="input-field w-full"
+            />
+        </div>
+    </div>
+
+    <div className="flex flex-wrap gap-2 mb-6">
+        <button 
+            onClick={() => {
+                const yearStart = format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd');
+                const yearEnd = format(new Date(new Date().getFullYear(), 11, 31), 'yyyy-MM-dd');
+                setReportRange({ start: yearStart, end: yearEnd });
+            }}
+            className="px-3 py-1.5 rounded-md bg-zinc-800 text-gray-300 text-xs hover:bg-zinc-700 transition-colors"
+        >
+            Select Current Year
+        </button>
+        <button 
+            onClick={() => setReportRange({ 
+                start: format(new Date(), 'yyyy-MM-dd'), 
+                end: format(new Date(), 'yyyy-MM-dd') 
+            })}
+            className="px-3 py-1.5 rounded-md bg-zinc-800 text-gray-300 text-xs hover:bg-zinc-700 transition-colors"
+        >
+            Reset to Today
+        </button>
+    </div>
+
+    <button 
+        onClick={handleExportCustomReport}
+        className="btn-gold w-full flex items-center justify-center gap-2"
+    >
+        <Download className="w-4 h-4" />
+        Export CSV Report
+    </button>
+</div>
 
                                 {/* Recent Bookings */}
                                 <div className="card">
@@ -376,6 +582,7 @@ const AdminPanel = () => {
                                     </div>
                                 </div>
                             </div>
+                            
                         )}
 
                         {/* Bookings Tab */}

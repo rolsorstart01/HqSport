@@ -45,13 +45,8 @@ const Book = ({ onLoginRequired }) => {
     }, [selectedDate, selectedCourt]);
 
     const calculateTotal = () => {
-        let total = 0;
-        selectedSlots.forEach(slotId => {
-            const hour = parseInt(slotId.replace('slot-', ''));
-            total += hour < 13 ? 800 : 1200;
-        });
-        return total;
-    };
+            return selectedSlots.length * 1500;
+        };
 
     const baseAmount = calculateTotal();
     const discountAmount = appliedDiscount ? Math.round(baseAmount * appliedDiscount.percent / 100) : 0;
@@ -452,15 +447,6 @@ const Book = ({ onLoginRequired }) => {
                                             )}
                                             <span className="text-3xl font-bold text-yellow-400">{formatCurrency(totalAmount)}</span>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* Paddle Rental Info */}
-                                <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3 mb-4">
-                                    <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-blue-400 text-sm font-medium mb-1">Paddle Rental Available</p>
-                                        <p className="text-blue-300/80 text-xs">Paddles are available on-site for ₹250 per hour per paddle.</p>
                                     </div>
                                 </div>
 

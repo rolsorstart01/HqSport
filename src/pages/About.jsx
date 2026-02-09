@@ -28,9 +28,7 @@ const About = () => {
     const amenities = [
         { name: "Premium Lounge", desc: "Comfortable seating", icon: "🛋️" },
         { name: "Pro Lighting", desc: "Night games", icon: "💡" },
-        { name: "Pro Shop", desc: "Paddle rentals", icon: "🏸" },
         { name: "Changing Rooms", desc: "Clean & modern", icon: "🚿" },
-        { name: "Valet Parking", desc: "Hassle-free", icon: "🅿️" },
         { name: "Refreshments", desc: "Cafe & drinks", icon: "☕" }
     ];
 

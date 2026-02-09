@@ -3,7 +3,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPasswor
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../config/firebase.config';
 import { sendBookingEmail } from './emailService';
-
+import { collection, doc, setDoc, getDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "./firebaseConfig";
 // Check if Firebase is properly configured
 const isFirebaseConfigured = () => {
     return firebaseConfig.apiKey &&
@@ -608,6 +609,27 @@ const onAuthStateChangedWrapper = (authInstance, callback) => {
         return () => { };
     }
     return onAuthStateChanged(authInstance, callback);
+};
+export const closeCourtsForDay = async (date, reason) => {
+  const ref = doc(db, "closedDays", date); // date = YYYY-MM-DD
+  await setDoc(ref, {
+    date,
+    reason,
+    createdAt: serverTimestamp()
+  });
+};
+
+// Reopen courts
+export const reopenCourtsForDay = async (date) => {
+  const ref = doc(db, "closedDays", date);
+  await deleteDoc(ref);
+};
+
+// Check if a day is closed
+export const getClosedDay = async (date) => {
+  const ref = doc(db, "closedDays", date);
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data() : null;
 };
 
 export { auth, db, onAuthStateChangedWrapper as onAuthStateChanged, isDemoMode };
