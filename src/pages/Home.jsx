@@ -296,7 +296,7 @@ const Home = () => {
             </section >
 
             {/* Final CTA */}
-            < section className="py-40 relative overflow-hidden" >
+            <section className="py-40 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[#020617]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-900/20 via-[#020617]/50 to-[#020617]"></div>
 
@@ -312,7 +312,7 @@ const Home = () => {
                         <span>Book a Court</span>
                     </Link>
                 </div>
-            </section >
+            </section>
 
         </div >
     );

@@ -51,7 +51,7 @@ const knowledgeBase = [
         id: 'pricing_general',
         keywords: ['price', 'cost', 'rate', 'charge', 'how much', 'fee', 'pricing', 'tariff'],
         weight: 5,
-        response: `Our court rates are structured for your convenience:\n\n☀️ **Morning Session** (6 AM - 1 PM): **₹${facilityInfo.pricing.morning.price}/hour**\n🌙 **Evening Session** (1 PM - 12 AM): **₹${facilityInfo.pricing.evening.price}/hour**\n\nWould you like to proceed with a booking?`
+        response: `Our court rates are structured for your convenience. The standard rate is ₹${facilityInfo.pricing.standardRate} per hour (${facilityInfo.pricing.currency}). Would you like to proceed with a booking?`
     },
 
     // --- BOOKING & PAYMENTS ---
