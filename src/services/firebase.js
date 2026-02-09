@@ -3,9 +3,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPasswor
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../config/firebase.config';
 import { sendBookingEmail } from './emailService';
-import { collection, doc, setDoc, getDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebaseConfig";
-// Check if Firebase is properly configured
+// Check if Firebase is properly configured...
 const isFirebaseConfigured = () => {
     return firebaseConfig.apiKey &&
         firebaseConfig.apiKey !== 'YOUR_API_KEY' &&
