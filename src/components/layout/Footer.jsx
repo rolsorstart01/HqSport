@@ -60,16 +60,8 @@ const Footer = () => {
                         <h4 className="text-white font-semibold mb-6">Court Rates</h4>
                         <ul className="space-y-3 text-sm">
                             <li className="text-slate-400">
-                                <span className="text-yellow-400 font-medium">₹800</span> / hour
-                                <span className="block text-slate-500 text-xs mt-0.5">Morning (6 AM – 1 PM)</span>
-                            </li>
-                            <li className="text-slate-400">
-                                <span className="text-yellow-400 font-medium">₹1200</span> / hour
-                                <span className="block text-slate-500 text-xs mt-0.5">Evening (1 PM – 12 AM)</span>
-                            </li>
-                            <li className="text-slate-400">
-                                <span className="text-yellow-400 font-medium">₹250</span> / hour
-                                <span className="block text-slate-500 text-xs mt-0.5">Paddle Rental</span>
+                                <span className="text-yellow-400 font-medium">₹1500</span> / hour
+                                <span className="block text-slate-500 text-xs mt-0.5">Fixed Rate (6 AM – 12 AM)</span>
                             </li>
                         </ul>
                     </div>
