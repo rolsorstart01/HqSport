@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format, parseISO, isToday, isBefore, isAfter } from 'date-fns';
 import {
     Shield, Users, Calendar, MessageSquare, Image, TrendingUp,
@@ -13,10 +13,10 @@ import {
     createBooking, subscribeToBookings, subscribeToUsers, subscribeToDiscounts,
     subscribeToBroadcasts, subscribeToGallery, banUser, unbanUser
 } from '../services/firebase';
+import BookingCalendar from '../components/booking/BookingCalendar';
 import { formatCurrency } from '../services/razorpay';
 import { toast } from 'react-hot-toast';
 import { sendBookingEmail, sendBookAgainEmail } from '../services/emailService';
-import { closeCourtsForDay, reopenCourtsForDay } from '../services/firebase';
 
 
 const AdminPanel = () => {
@@ -48,10 +48,20 @@ const AdminPanel = () => {
         amount: 800,
         paid: true
     });
-    // Close Courts (Global)
-const [closedDate, setClosedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    // Close Courts (Global) - use Date object for calendar
+    const [closedDate, setClosedDate] = useState(new Date());
 const [closeReason, setCloseReason] = useState('Holiday');
 const [closingLoading, setClosingLoading] = useState(false);
+
+// Helper to identify "Close All Courts" bookings
+const isClosedCourtBooking = (booking) => {
+  return booking?.userId === 'admin-closed';
+};
+
+// Filtered bookings for UI display (excludes closed-court markers)
+const displayBookings = useMemo(() => {
+  return bookings.filter(booking => !isClosedCourtBooking(booking));
+}, [bookings]);
 
 
     useEffect(() => {
@@ -111,32 +121,43 @@ const [closingLoading, setClosingLoading] = useState(false);
         }
         setLoading(false);
     };
-    const handleCloseCourtsForDay = async () => {
-  if (!closedDate || !closeReason) {
-    toast.error("Select date and reason");
+        const handleCloseCourtsForDay = async () => {
+  if (!closedDate) {
+    toast.error("Select a date");
     return;
   }
 
   try {
     setClosingLoading(true);
-    await closeCourtsForDay(closedDate, closeReason);
-    toast.success(`All courts closed for ${closedDate}`);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to close courts");
-  } finally {
-    setClosingLoading(false);
-  }
-};
+    const dateStr = format(closedDate, 'yyyy-MM-dd');
 
-const handleReopenCourtsForDay = async () => {
-  try {
-    setClosingLoading(true);
-    await reopenCourtsForDay(closedDate);
-    toast.success(`Courts reopened for ${closedDate}`);
+    // Create bookings for all 4 courts and all time slots (6 AM to 11 PM)
+    for (let court = 1; court <= 4; court++) {
+      for (let hour = 6; hour <= 23; hour++) {
+        const slotId = `slot-${hour}`;
+        const bookingData = {
+          userId: 'admin-closed',
+          userEmail: 'admin@hqsport.in',
+          userName: `Closed - ${closeReason}`,
+          courtId: court,
+          date: dateStr,
+          slot: `${hour.toString().padStart(2, '0')}:00`,
+          slots: [slotId],
+          totalAmount: 0,
+          paidAmount: 0,
+          remainingAmount: 0,
+          status: 'booked',
+          paymentId: `closed_${dateStr}_${closeReason}`
+        };
+
+        await createBooking(bookingData);
+      }
+    }
+
+    toast.success(`All courts marked as booked for ${dateStr} (${closeReason})`);
   } catch (err) {
     console.error(err);
-    toast.error("Failed to reopen courts");
+    toast.error("Failed to mark courts as booked");
   } finally {
     setClosingLoading(false);
   }
@@ -306,55 +327,61 @@ const handleReopenCourtsForDay = async () => {
 });
 
 const handleExportCustomReport = () => {
-    const startDate = parseISO(reportRange.start);
-    const endDate = parseISO(reportRange.end);
-    endDate.setHours(23, 59, 59, 999);
+  const startDate = parseISO(reportRange.start);
+  const endDate = parseISO(reportRange.end);
+  endDate.setHours(23, 59, 59, 999);
+  
+  // Filter out closed-court bookings AND cancelled bookings
+  const filteredBookings = bookings.filter(b => {
+    if (b.status === 'cancelled') return false;
+    if (isClosedCourtBooking(b)) return false; // Critical fix
+    const bookingDate = parseISO(b.date);
+    return bookingDate >= startDate && bookingDate <= endDate;
+  });
 
-    const filteredBookings = bookings.filter(b => {
-        if (b.status === 'cancelled') return false;
-        const bookingDate = parseISO(b.date);
-        // Check if date is within range (inclusive)
-        return (bookingDate >= startDate && bookingDate <= endDate);
-    });
+  if (filteredBookings.length === 0) {
+    toast.error("No bookings found for this range");
+    return;
+  }
 
-    if (filteredBookings.length === 0) {
-        toast.error("No bookings found for this range");
-        return;
-    }
+  const headers = ['Date', 'User Name', 'Email', 'Court', 'Time Slot', 'Amount Paid', 'Status'];
+  const rows = filteredBookings.map(b => [
+    b.date,
+    b.userName || 'N/A',
+    b.userEmail || 'N/A',
+    `Court ${b.courtId}`,
+    b.slot || 'N/A',
+    b.paidAmount || 0,
+    b.status
+  ]);
 
-    const headers = ['Date', 'User Name', 'Email', 'Court', 'Time Slot', 'Amount Paid', 'Status'];
-    const rows = filteredBookings.map(b => [
-        b.date,
-        b.userName || 'N/A',
-        b.userEmail || 'N/A',
-        `Court ${b.courtId}`,
-        b.slot || 'N/A',
-        b.paidAmount || 0,
-        b.status
-    ]);
+  const totalRev = filteredBookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+  rows.push(['', '', '', '', 'TOTAL REVENUE', totalRev, '']);
 
-    // Calculate total revenue for the footer of the CSV
-    const totalRev = filteredBookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
-    rows.push(['', '', '', '', 'TOTAL REVENUE', totalRev, '']);
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
 
-    const csvContent = [
-        headers.join(','),
-        ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `report_${reportRange.start}_to_${reportRange.end}.csv`);
-    link.click();
-    toast.success("Report downloaded successfully");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob); // Fixed typo: "bl ob" → blob
+  link.setAttribute('download', `report_${reportRange.start}_to_${reportRange.end}.csv`);
+  link.click();
+  toast.success("Report downloaded successfully");
 };
 
-    // Stats
-    const now = new Date();
-    const todayBookings = bookings.filter(b => isToday(parseISO(b.date)) && b.status !== 'cancelled');
-    const upcomingBookings = bookings.filter(b => isAfter(parseISO(b.date), now) && b.status !== 'cancelled');
-    const totalRevenue = bookings.filter(b => b.status !== 'cancelled').reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+// Stats (using filtered displayBookings to exclude closed-court markers)
+const now = new Date();
+const todayBookings = displayBookings.filter(b => 
+  isToday(parseISO(b.date)) && b.status !== 'cancelled'
+);
+const upcomingBookings = displayBookings.filter(b => 
+  isAfter(parseISO(b.date), now) && b.status !== 'cancelled'
+);
+const totalRevenue = displayBookings
+  .filter(b => b.status !== 'cancelled')
+  .reduce((sum, b) => sum + (b.paidAmount || 0), 0);
 
     const getBookingStatusColor = (booking) => {
         if (booking.status === 'cancelled') return 'bg-red-500';
@@ -424,80 +451,67 @@ const handleExportCustomReport = () => {
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
                             <div className="space-y-8 animate-fade-in">
-                                {/* Stats Grid */}
+                                {/* Close Courts Card - Large Calendar */}
+                                <div className="card p-8 border-l-4 border-red-500">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
+                                            <AlertCircle className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white">Close All Courts</h3>
+                                            <p className="text-xs text-gray-400">
+                                                Select a date to mark all courts as booked
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Calendar - Full Width */}
+                                    <div className="mb-6">
+                                        <BookingCalendar selectedDate={closedDate} onDateSelect={setClosedDate} />
+                                    </div>
+
+                                    {/* Reason & Buttons */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-gray-500 mb-2">Reason</label>
+                                            <select
+                                                value={closeReason}
+                                                onChange={(e) => setCloseReason(e.target.value)}
+                                                className="input-field w-full appearance-none bg-zinc-900"
+                                            >
+                                                <option value="Holiday">Holiday</option>
+                                                <option value="Renovation">Renovation</option>
+                                                <option value="Maintenance">Maintenance</option>
+                                            </select>
+                                        </div>
+
+                                        <button
+                                            onClick={handleCloseCourtsForDay}
+                                            disabled={closingLoading}
+                                            className="md:col-span-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white py-3 rounded-lg font-medium transition-colors"
+                                        >
+                                            {closingLoading ? "Marking Courts Booked..." : "Mark All Courts as Booked"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Stats Grid - Smaller Cards */}
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="card p-6 border-l-4 border-red-500">
-  <div className="flex items-center gap-3 mb-4">
-    <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
-      <AlertCircle className="w-5 h-5" />
-    </div>
-    <div>
-      <h3 className="text-lg font-semibold text-white">Close All Courts</h3>
-      <p className="text-xs text-gray-400">
-        Use this for holidays, renovation, or maintenance
-      </p>
-    </div>
-  </div>
-
-  <div className="grid md:grid-cols-3 gap-4 mb-4">
-    <div>
-      <label className="block text-xs text-gray-500 mb-1">Date</label>
-      <input
-        type="date"
-        value={closedDate}
-        onChange={(e) => setClosedDate(e.target.value)}
-        className="input-field w-full"
-      />
-    </div>
-
-    <div>
-      <label className="block text-xs text-gray-500 mb-1">Reason</label>
-      <select
-        value={closeReason}
-        onChange={(e) => setCloseReason(e.target.value)}
-        className="input-field w-full appearance-none bg-zinc-900"
-      >
-        <option value="Holiday">Holiday</option>
-        <option value="Renovation">Renovation</option>
-        <option value="Maintenance">Maintenance</option>
-      </select>
-    </div>
-
-    <div className="flex items-end gap-2">
-      <button
-        onClick={handleCloseCourtsForDay}
-        disabled={closingLoading}
-        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded"
-      >
-        {closingLoading ? "Closing..." : "Close Courts"}
-      </button>
-
-      <button
-        onClick={handleReopenCourtsForDay}
-        disabled={closingLoading}
-        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-      >
-        Reopen
-      </button>
-    </div>
-  </div>
-</div>
-
-                                    <div className="card-gold">
-                                        <p className="text-gray-400 text-sm mb-1">Total Users</p>
-                                        <p className="text-3xl font-bold text-white">{users.length}</p>
+                                    <div className="card p-4 bg-zinc-900/40 border border-yellow-500/10 rounded-2xl">
+                                        <p className="text-gray-400 text-xs mb-1">Total Users</p>
+                                        <p className="text-2xl font-bold text-white">{users.length}</p>
                                     </div>
-                                    <div className="card-gold">
-                                        <p className="text-gray-400 text-sm mb-1">Active Bookings</p>
-                                        <p className="text-3xl font-bold text-white">{bookings.length}</p>
+                                    <div className="card p-4 bg-zinc-900/40 border border-yellow-500/10 rounded-2xl">
+                                        <p className="text-gray-400 text-xs mb-1">Active Bookings</p>
+                                        <p className="text-2xl font-bold text-white">{displayBookings.length}</p>
                                     </div>
-                                    <div className="card-gold">
-                                        <p className="text-gray-400 text-sm mb-1">Today's Bookings</p>
-                                        <p className="text-3xl font-bold text-yellow-400">{todayBookings.length}</p>
+                                    <div className="card p-4 bg-zinc-900/40 border border-yellow-500/10 rounded-2xl">
+                                        <p className="text-gray-400 text-xs mb-1">Today's Bookings</p>
+                                        <p className="text-2xl font-bold text-yellow-400">{todayBookings.length}</p>
                                     </div>
-                                    <div className="card-gold">
-                                        <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
-                                        <p className="text-3xl font-bold text-green-400">{formatCurrency(totalRevenue)}</p>
+                                    <div className="card p-4 bg-zinc-900/40 border border-yellow-500/10 rounded-2xl">
+                                        <p className="text-gray-400 text-xs mb-1">Total Revenue</p>
+                                        <p className="text-2xl font-bold text-green-400">{formatCurrency(totalRevenue)}</p>
                                     </div>
                                 </div>
                                 <div className="card p-6 border-l-4 border-yellow-500">
@@ -567,7 +581,7 @@ const handleExportCustomReport = () => {
                                 <div className="card">
                                     <h3 className="text-lg font-semibold text-white mb-4">Recent Bookings</h3>
                                     <div className="space-y-3">
-                                        {bookings.slice(0, 5).map((booking) => (
+                                        {displayBookings.slice(0, 5).map((booking) => (
                                             <div key={booking.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/50">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-2 h-2 rounded-full ${getBookingStatusColor(booking)}`}></div>
@@ -601,7 +615,7 @@ const handleExportCustomReport = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {bookings.map((booking) => (
+                                            {displayBookings.map((booking) => (
                                                 <tr key={booking.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
                                                     <td className="py-3 px-4">
                                                         <div className={`w-3 h-3 rounded-full ${getBookingStatusColor(booking)}`} title={booking.status}></div>

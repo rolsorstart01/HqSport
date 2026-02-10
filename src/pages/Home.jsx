@@ -191,42 +191,41 @@ const Home = () => {
                 <div className="h-16 md:h-20 lg:h-24"></div>
 
                 {/* Pricing Cards */}
-                <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto items-stretch">
-                    {/* Morning */}
-                    <div className="glass-card p-12 flex flex-col items-center text-center hover:bg-white/5 transition-colors h-full">
-                        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-                            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-800 text-slate-300 text-sm font-medium">
-                                <Clock className="w-4 h-4" />
-                                Morning
-                            </div>
-                            <div>
-                                <div className="text-5xl font-bold text-white mb-2">₹800</div>
-                                <div className="text-slate-500 text-lg">per hour</div>
-                            </div>
-                            <p className="text-slate-400 text-base">6:00 AM — 1:00 PM</p>
-                        </div>
-                        <Link to="/book" className="btn-secondary w-full justify-center py-4 mt-10">Book Now</Link>
-                    </div>
+{/* Pricing Cards */}
+<div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto items-stretch">
+    {/* Evening - Featured */}
+    <div className="glass-card p-12 text-center flex flex-col items-center relative
+        transform lg:-translate-y-6 border-yellow-500/30
+        bg-gradient-to-b from-yellow-500/5 to-transparent
+        h-full overflow-visible
+        md:col-start-2">
+        
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-8 py-2 rounded-full bg-gold-gradient text-black text-sm font-bold shadow-lg shadow-yellow-500/20 uppercase tracking-wider z-20">
+            Most Popular
+        </div>
 
-                    {/* Evening - Featured */}
-                    <div className="glass-card p-12 text-center flex flex-col items-center relative transform lg:-translate-y-6 border-yellow-500/30 bg-gradient-to-b from-yellow-500/5 to-transparent h-full overflow-visible">
-                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-8 py-2 rounded-full bg-gold-gradient text-black text-sm font-bold shadow-lg shadow-yellow-500/20 uppercase tracking-wider z-20">
-                            Most Popular
-                        </div>
-                        <div className="flex-1 flex flex-col items-center justify-center gap-8 pt-6">
-                            <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-yellow-500/10 text-yellow-400 text-sm font-medium">
-                                <Sparkles className="w-4 h-4" />
-                                Evening
-                            </div>
-                            <div>
-                                <div className="text-6xl font-bold text-gold-gradient mb-3">₹1200</div>
-                                <div className="text-slate-500 text-lg">per hour</div>
-                            </div>
-                            <p className="text-slate-300 text-lg">1:00 PM — 12:00 AM</p>
-                        </div>
-                        <Link to="/book" className="btn-primary w-full justify-center py-4 text-lg shadow-xl shadow-yellow-500/20 mt-12">Book Now</Link>
-                    </div>
-                </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 pt-6">
+            <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-yellow-500/10 text-yellow-400 text-sm font-medium">
+                Fixed Rate
+            </div>
+
+            <div>
+                <div className="text-6xl font-bold text-gold-gradient mb-3">₹1500</div>
+                <div className="text-slate-500 text-lg">per hour</div>
+            </div>
+
+            <p className="text-slate-300 text-lg">6:00 AM — 12:00 AM</p>
+        </div>
+
+        <Link
+            to="/book"
+            className="btn-primary w-full justify-center py-4 text-lg shadow-xl shadow-yellow-500/20 mt-12"
+        >
+            Book Now
+        </Link>
+    </div>
+</div>
+
             </section>
 
             {/* Location Section */}

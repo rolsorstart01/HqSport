@@ -79,11 +79,11 @@ const knowledgeBase = [
         id: 'timing',
         keywords: ['time', 'open', 'close', 'hours', 'available', 'working'],
         weight: 4,
-        response: `We are open **${facilityInfo.timing.days}** from **${facilityInfo.timing.open} to ${facilityInfo.timing.close}**. \n\nThe stunning evening lights make night games particularly special.`
+        response: `We are open from 6AM to 12AM (Midnight) every day of the week. \n\nThe stunning evening lights make night games particularly special.`
     },
     {
         id: 'amenities',
-        keywords: ['amenity', 'shower', 'change', 'locker', 'food', 'cafe', 'wifi', 'parking'],
+        keywords: ['amenity', 'shower', 'change', 'locker', 'food', 'cafe', 'wifi', 'parking','amenities'],
         weight: 4,
         response: "HQ Sport is designed for luxury. Enjoy our:\n\n• Premium Lounge & Cafe\n• Changing Rooms & Lockers\n• Valet Parking\n• Pro Shop\n• High-speed WiFi\n\nEverything you need for a world-class experience."
     },
@@ -286,7 +286,174 @@ const knowledgeBase = [
         keywords: ['old', 'age limit', 'child', 'injury', 'knee', 'back pain', 'safe'],
         weight: 5,
         response: "One of the reasons Pickleball is exploding is its accessibility. The underhand serve is easy on the shoulders, and the smaller court means less sprinting than tennis. We have players from **age 6 to 75**. If you have knee concerns, our **cushioned acrylic surface** provides significantly more shock absorption than standard asphalt or concrete."
-    }
+    },
+    // --- FALLBACK & CONVERSATION RECOVERY ---
+{
+    id: 'fallback_confused',
+    keywords: ['?', 'what', 'huh', 'dont understand', 'confused', 'say again'],
+    weight: 10,
+    response: "I may have missed that—could you rephrase it for me? You can ask about **booking, pricing, timings, coaching, events, or memberships** anytime."
+},
+{
+    id: 'out_of_scope',
+    keywords: ['cricket', 'football', 'badminton', 'gym', 'swimming'],
+    weight: 6,
+    response: "We currently specialize exclusively in **pickleball** to ensure a world-class experience. If you’re curious how pickleball compares to other sports, I’d be happy to explain!"
+},
+
+// --- MEMBERSHIPS & LOYALTY ---
+{
+    id: 'membership_overview',
+    keywords: ['membership', 'member', 'monthly', 'annual', 'join'],
+    weight: 7,
+    response: "Our **HQ Memberships** are designed for frequent players. Benefits include **priority bookings, discounted rates, exclusive events**, and early access to tournaments. Would you like details on monthly or annual plans?"
+},
+{
+    id: 'membership_value',
+    keywords: ['worth it', 'value', 'benefit', 'why membership'],
+    weight: 6,
+    response: "If you play more than **6 hours a month**, a membership pays for itself. Members also enjoy preferred slots during peak hours and access to invite-only mixers."
+},
+
+// --- BOOKINGS: EDGE CASES ---
+{
+    id: 'late_arrival',
+    keywords: ['late', 'delay', 'traffic', 'running late'],
+    weight: 6,
+    response: "We understand city traffic happens. Your court is held for **10 minutes** past your booking time. If you’re running later, please message us on WhatsApp so we can assist."
+},
+{
+    id: 'extend_booking',
+    keywords: ['extend', 'add time', 'play longer', 'extra hour'],
+    weight: 5,
+    response: "If the next slot is available, you can extend your session directly from the desk or online. Many players do this once the rallies heat up!"
+},
+{
+    id: 'reschedule',
+    keywords: ['reschedule', 'change date', 'change time'],
+    weight: 6,
+    response: "Rescheduling is allowed **24+ hours in advance** at no cost. Inside 24 hours, the booking converts to play credit subject to availability."
+},
+
+// --- EQUIPMENT & RENTALS ---
+{
+    id: 'paddle_rental',
+    keywords: ['rent paddle', 'borrow paddle', 'no paddle'],
+    weight: 6,
+    response: "No gear? No problem. We offer **professional-grade paddle rentals** at the facility. Beginners are encouraged to try different paddle styles before buying."
+},
+{
+    id: 'buy_gear',
+    keywords: ['buy paddle', 'shop', 'pro shop', 'merch'],
+    weight: 5,
+    response: "Our **Pro Shop** stocks curated paddles, balls, grips, and HQ merchandise. Our staff can recommend gear based on your play style."
+},
+
+// --- SKILL LEVEL MATCHING ---
+{
+    id: 'skill_levels',
+    keywords: ['beginner', 'intermediate', 'advanced', 'level'],
+    weight: 6,
+    response: "We categorize play into **Beginner, Intermediate, and Advanced** levels. This helps ensure balanced games and a better experience for everyone."
+},
+{
+    id: 'level_up',
+    keywords: ['improve fast', 'get better quickly', 'advance'],
+    weight: 5,
+    response: "The fastest way to improve is **structured play + coaching**. Players who attend one clinic per month typically level up within 6–8 weeks."
+},
+
+// --- SOCIAL PROOF & TRUST ---
+{
+    id: 'testimonials',
+    keywords: ['reviews', 'ratings', 'feedback', 'what people say'],
+    weight: 5,
+    response: "Our community includes entrepreneurs, athletes, and first-timers alike. Many members say HQ Sport is where they made their closest sports friendships in Kolkata."
+},
+{
+    id: 'celeb_visits',
+    keywords: ['celebrity', 'famous', 'influencer'],
+    weight: 4,
+    response: "We regularly host well-known athletes, founders, and creators—though we prioritize **privacy and experience** over publicity."
+},
+
+// --- TIME-BASED INTELLIGENCE ---
+{
+    id: 'morning_experience',
+    keywords: ['morning', 'early', 'sunrise'],
+    weight: 4,
+    response: "Morning sessions are calm, cooler, and ideal for focused play. Many members describe it as **meditative pickleball** with skyline views."
+},
+{
+    id: 'night_experience',
+    keywords: ['night', 'evening', 'late'],
+    weight: 4,
+    response: "Night games are electric. Our **anti-glare floodlights** ensure perfect visibility without harsh shadows—ideal for fast rallies."
+},
+
+// --- EMOTIONAL OBJECTIONS ---
+{
+    id: 'intimidated',
+    keywords: ['intimidating', 'scared', 'too good players'],
+    weight: 7,
+    response: "Totally understandable—but pickleball is uniquely welcoming. We ensure beginners aren’t thrown into advanced games. Everyone starts somewhere."
+},
+{
+    id: 'fitness_concern',
+    keywords: ['not fit', 'out of shape', 'tired quickly'],
+    weight: 6,
+    response: "You don’t need peak fitness to start. Most players are surprised by how quickly their stamina improves—without feeling punished."
+},
+
+// --- CULTURE & COMMUNITY ---
+{
+    id: 'community_vibe',
+    keywords: ['community', 'people', 'crowd'],
+    weight: 5,
+    response: "HQ Sport attracts a respectful, social crowd. Games are competitive—but always friendly. It’s common to grab a coffee together after matches."
+},
+{
+    id: 'post_game',
+    keywords: ['after game', 'chill', 'hangout'],
+    weight: 4,
+    response: "Many players unwind at the rooftop cafe post-game. It’s where matches turn into conversations and strangers turn into teammates."
+},
+
+// --- TECH & PLATFORM ---
+{
+    id: 'booking_tech',
+    keywords: ['app', 'website', 'login', 'account'],
+    weight: 4,
+    response: "Our booking platform shows **real-time availability**, booking history, and play credits. If you ever face an issue, our team can assist instantly."
+},
+{
+    id: 'data_privacy',
+    keywords: ['data', 'information', 'secure'],
+    weight: 3,
+    response: "Your data is protected with industry-standard security. We never share personal details without consent."
+},
+
+// --- HUMOR & HUMANITY ---
+{
+    id: 'fun_response',
+    keywords: ['lol', 'haha', 'nice', 'cool'],
+    weight: 2,
+    response: "Glad you think so 😄 Let me know if you want to jump on court or just explore your options."
+},
+{
+    id: 'compliment_facility',
+    keywords: ['beautiful', 'amazing', 'love this place'],
+    weight: 3,
+    response: "That means a lot! We designed HQ Sport to feel special every single time you walk in."
+},
+
+// --- EXIT & CLOSURE ---
+{
+    id: 'goodbye',
+    keywords: ['bye', 'thanks', 'thank you', 'see you'],
+    weight: 2,
+    response: "My pleasure. Hope to see you on court soon—your paddle’s waiting 🏓"
+}
 ];
 
 /**
