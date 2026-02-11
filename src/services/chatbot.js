@@ -26,8 +26,8 @@ const facilityInfo = {
     contact: {
         instagram: '@hq.sportslab',
         email: 'hqsports.41@gmail.com',
-        whatsapp: '+1 2066788644',
-        phone: '2066788644'
+        whatsapp: '+91 9073005990',
+        phone: '9073005990'
     }
 };
 

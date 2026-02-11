@@ -26,7 +26,7 @@ const Footer = () => {
                                 <Instagram className="w-5 h-5" />
                             </a>
                             <Link
-                                to="https://wa.me/12066788644"
+                                to="https://wa.me/919073005990"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-white transition-all transform hover:scale-110"
