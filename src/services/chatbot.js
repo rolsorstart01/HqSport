@@ -112,7 +112,7 @@ const knowledgeBase = [
         id: 'contact_direct',
         keywords: ['contact', 'call', 'whatsapp', 'reach out', 'talk to human', 'support'],
         weight: 5,
-        response: `Need human assistance? You can reach us via WhatsApp at **${facilityInfo.contact.whatsapp}** or call us at **${facilityInfo.contact.phone}**. You can also email us at **${facilityInfo.contact.email}**.`
+        response: `Need human assistance? You can reach us via WhatsApp at ${facilityInfo.contact.whatsapp} or call us at ${facilityInfo.contact.phone}. You can also email us at **${facilityInfo.contact.email}**.`
     },
     // --- ATMOSPHERE & EXPERIENCE ---
     {
