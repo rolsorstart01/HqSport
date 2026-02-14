@@ -52,6 +52,135 @@ const AdminPanel = () => {
     const [closedDate, setClosedDate] = useState(new Date());
 const [closeReason, setCloseReason] = useState('Holiday');
 const [closingLoading, setClosingLoading] = useState(false);
+// Court management states
+const [managementMode, setManagementMode] = useState('close'); // 'close' or 'reopen'
+const [managementDate, setManagementDate] = useState(new Date());
+const [selectedCourts, setSelectedCourts] = useState([]);
+const [closeStartTime, setCloseStartTime] = useState('06:00');
+const [closeEndTime, setCloseEndTime] = useState('23:00');
+const [selectedReopenCourts, setSelectedReopenCourts] = useState([]);
+const [reopenLoading, setReopenLoading] = useState(false);
+const [closedSlotsPreview, setClosedSlotsPreview] = useState([]); // For reopen preview
+// Toggle court selection
+const handleCourtToggle = (court, checked) => {
+  setSelectedCourts(prev => 
+    checked ? [...prev, court] : prev.filter(c => c !== court)
+  );
+};
+
+const handleReopenCourtToggle = (court, checked) => {
+  setSelectedReopenCourts(prev => 
+    checked ? [...prev, court] : prev.filter(c => c !== court)
+  );
+};
+
+// Preview closed slots when date/courts change (for reopen mode)
+useEffect(() => {
+  if (managementMode !== 'reopen') return;
+  
+  const dateStr = format(managementDate, 'yyyy-MM-dd');
+  const filtered = bookings.filter(b => 
+    b.date === dateStr && 
+    isClosedCourtBooking(b) && 
+    b.status !== 'cancelled' &&
+    (selectedReopenCourts.length === 0 || selectedReopenCourts.includes(parseInt(b.courtId)))
+  );
+  setClosedSlotsPreview(filtered);
+}, [managementDate, selectedReopenCourts, managementMode, bookings]);
+
+// CLOSE SPECIFIC COURTS HANDLER
+const handleCloseSpecificCourts = async () => {
+  if (selectedCourts.length === 0) {
+    toast.error("Select at least one court");
+    return;
+  }
+  
+  const startH = parseInt(closeStartTime.split(':')[0]);
+  const endH = parseInt(closeEndTime.split(':')[0]);
+  if (startH >= endH) {
+    toast.error("Start time must be before end time");
+    return;
+  }
+
+  try {
+    setClosingLoading(true);
+    const dateStr = format(managementDate, 'yyyy-MM-dd');
+    const createdBookings = [];
+
+    for (const court of selectedCourts) {
+      for (let h = startH; h <= endH; h++) {
+        const timeSlot = `${h.toString().padStart(2, '0')}:00`;
+        const bookingData = {
+          userId: 'admin-closed',
+          userEmail: 'admin@hqsport.in',
+          userName: `Closed - ${closeReason}`,
+          courtId: court,
+          date: dateStr,
+          slot: timeSlot,
+          slots: [`slot-${h}`],
+          totalAmount: 0,
+          paidAmount: 0,
+          remainingAmount: 0,
+          status: 'booked',
+          paymentId: `closed_${dateStr}_${closeReason}_${court}_${timeSlot}`
+        };
+        
+        const result = await createBooking(bookingData);
+        if (!result?.error) createdBookings.push(result);
+      }
+    }
+    
+    toast.success(`${createdBookings.length} slots marked as closed`);
+    // Reset form
+    setSelectedCourts([]);
+    setCloseStartTime('06:00');
+    setCloseEndTime('23:00');
+  } catch (err) {
+    console.error("Close courts error:", err);
+    toast.error("Failed to close courts. Check console for details.");
+  } finally {
+    setClosingLoading(false);
+  }
+};
+
+// REOPEN COURTS HANDLER
+const handleReopenCourts = async () => {
+  if (closedSlotsPreview.length === 0) {
+    toast.error("No closed slots found for selected criteria");
+    return;
+  }
+
+  if (!window.confirm(
+    `This will reopen ${closedSlotsPreview.length} slot(s) on ${format(managementDate, 'MMM d, yyyy')}. ` +
+    `This cannot be undone. Proceed?`
+  )) return;
+
+  try {
+    setReopenLoading(true);
+    let successCount = 0;
+    
+    // Cancel bookings in parallel with error handling
+    await Promise.allSettled(
+      closedSlotsPreview.map(async (booking) => {
+        try {
+          await cancelBooking(booking.id);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to reopen slot ${booking.id}:`, err);
+        }
+      })
+    );
+    
+    toast.success(`${successCount} slot(s) successfully reopened!`);
+    setSelectedReopenCourts([]);
+    setClosedSlotsPreview([]);
+  } catch (err) {
+    console.error("Reopen courts error:", err);
+    toast.error("Partial failure during reopen operation. Check console.");
+  } finally {
+    setReopenLoading(false);
+  }
+};
 
 // Helper to identify "Close All Courts" bookings
 const isClosedCourtBooking = (booking) => {
@@ -451,49 +580,195 @@ const totalRevenue = displayBookings
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
                             <div className="space-y-8 animate-fade-in">
-                                {/* Close Courts Card - Large Calendar */}
                                 <div className="card p-8 border-l-4 border-red-500">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
-                                            <AlertCircle className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-white">Close All Courts</h3>
-                                            <p className="text-xs text-gray-400">
-                                                Select a date to mark all courts as booked
-                                            </p>
-                                        </div>
-                                    </div>
+  <div className="flex items-center gap-3 mb-6">
+    <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
+      <AlertCircle className="w-5 h-5" />
+    </div>
+    <div>
+      <h3 className="text-lg font-semibold text-white">Manage Court Availability</h3>
+      <p className="text-xs text-gray-400">Close specific courts/times or reopen slots</p>
+    </div>
+  </div>
 
-                                    {/* Calendar - Full Width */}
-                                    <div className="mb-6">
-                                        <BookingCalendar selectedDate={closedDate} onDateSelect={setClosedDate} />
-                                    </div>
+  {/* Toggle between Close/Reopen modes */}
+  <div className="flex mb-6 bg-zinc-900 rounded-lg p-1 w-fit">
+    <button
+      onClick={() => setManagementMode('close')}
+      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        managementMode === 'close' 
+          ? 'bg-red-600 text-white' 
+          : 'text-gray-400 hover:text-white'
+      }`}
+    >
+      Close Courts
+    </button>
+    <button
+      onClick={() => setManagementMode('reopen')}
+      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        managementMode === 'reopen' 
+          ? 'bg-green-600 text-white' 
+          : 'text-gray-400 hover:text-white'
+      }`}
+    >
+      Reopen Courts
+    </button>
+  </div>
 
-                                    {/* Reason & Buttons */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-2">Reason</label>
-                                            <select
-                                                value={closeReason}
-                                                onChange={(e) => setCloseReason(e.target.value)}
-                                                className="input-field w-full appearance-none bg-zinc-900"
-                                            >
-                                                <option value="Holiday">Holiday</option>
-                                                <option value="Renovation">Renovation</option>
-                                                <option value="Maintenance">Maintenance</option>
-                                            </select>
-                                        </div>
+  {/* CALENDAR - COMMON FOR BOTH MODES */}
+  <div className="mb-6">
+    <BookingCalendar 
+      selectedDate={managementDate} 
+      onDateSelect={setManagementDate} 
+    />
+  </div>
 
-                                        <button
-                                            onClick={handleCloseCourtsForDay}
-                                            disabled={closingLoading}
-                                            className="md:col-span-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white py-3 rounded-lg font-medium transition-colors"
-                                        >
-                                            {closingLoading ? "Marking Courts Booked..." : "Mark All Courts as Booked"}
-                                        </button>
-                                    </div>
-                                </div>
+  {managementMode === 'close' ? (
+    // ===== CLOSE COURTS MODE =====
+    <div className="space-y-4">
+      {/* Court Selection */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-2">Select Courts</label>
+        <div className="grid grid-cols-4 gap-2">
+          {[1, 2, 3, 4].map(court => (
+            <label key={court} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={selectedCourts.includes(court)}
+                onChange={e => handleCourtToggle(court, e.target.checked)}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-white text-sm">Court {court}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Time Range */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs text-gray-500 mb-2">Start Time</label>
+          <select
+            value={closeStartTime}
+            onChange={e => setCloseStartTime(e.target.value)}
+            className="input-field w-full bg-zinc-900"
+          >
+            {Array.from({length: 18}, (_, i) => {
+              const h = i + 6;
+              return <option key={h} value={`${h.toString().padStart(2, '0')}:00`}>
+                {`${h.toString().padStart(2, '0')}:00`}
+              </option>
+            })}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-2">End Time</label>
+          <select
+            value={closeEndTime}
+            onChange={e => setCloseEndTime(e.target.value)}
+            className="input-field w-full bg-zinc-900"
+          >
+            {Array.from({length: 18}, (_, i) => {
+              const h = i + 6;
+              return <option key={h} value={`${h.toString().padStart(2, '0')}:00`}>
+                {`${h.toString().padStart(2, '0')}:00`}
+              </option>
+            })}
+          </select>
+        </div>
+      </div>
+
+      {/* Reason */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-2">Reason</label>
+        <select
+          value={closeReason}
+          onChange={e => setCloseReason(e.target.value)}
+          className="input-field w-full bg-zinc-900"
+        >
+          <option value="Holiday">Holiday</option>
+          <option value="Renovation">Renovation</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Event">Special Event</option>
+        </select>
+      </div>
+
+      <button
+        onClick={handleCloseSpecificCourts}
+        disabled={closingLoading || selectedCourts.length === 0}
+        className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 rounded-lg font-medium w-full transition-colors"
+      >
+        {closingLoading ? "Processing..." : `Mark ${selectedCourts.length} Court(s) Closed`}
+      </button>
+    </div>
+  ) : (
+    // ===== REOPEN COURTS MODE =====
+    <div className="space-y-4">
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
+        <p className="text-yellow-300 text-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          Only slots previously closed by admins will be reopened. User bookings remain unaffected.
+        </p>
+      </div>
+
+      {/* Court Selection for Reopen */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-2">Select Courts to Reopen (optional)</label>
+        <div className="grid grid-cols-4 gap-2">
+          {[1, 2, 3, 4].map(court => (
+            <label key={court} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={selectedReopenCourts.includes(court)}
+                onChange={e => handleReopenCourtToggle(court, e.target.checked)}
+                className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+              />
+              <span className="text-white text-sm">Court {court}</span>
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Leave unselected to reopen ALL closed slots on this date
+        </p>
+      </div>
+
+      <button
+        onClick={handleReopenCourts}
+        disabled={reopenLoading}
+        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-lg font-medium w-full transition-colors flex items-center justify-center gap-2"
+      >
+        {reopenLoading ? (
+          <>
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <Check className="w-4 h-4" />
+            Reopen Selected Slots
+          </>
+        )}
+      </button>
+      
+      {/* Preview of slots to reopen */}
+      {closedSlotsPreview.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-zinc-800">
+          <p className="text-sm font-medium text-white mb-2">Slots to reopen:</p>
+          <div className="flex flex-wrap gap-2">
+            {closedSlotsPreview.map(slot => (
+              <span 
+                key={slot.id} 
+                className="px-2 py-1 bg-zinc-800 text-green-400 text-xs rounded"
+              >
+                Court {slot.courtId} • {slot.slot}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
                                 {/* Stats Grid - Smaller Cards */}
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -603,6 +878,7 @@ const totalRevenue = displayBookings
                         {activeTab === 'bookings' && (
                             <div className="animate-fade-in">
                                 <div className="card overflow-x-auto">
+                                
                                     <table className="w-full">
                                         <thead>
                                             <tr className="border-b border-zinc-800">
