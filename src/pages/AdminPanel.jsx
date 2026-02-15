@@ -33,7 +33,7 @@ const AdminPanel = () => {
 
     // Form States
     const [broadcastMessage, setBroadcastMessage] = useState('');
-    const [newImageUrl, setNewImageUrl] = useState('');
+    const [newImage, setNewImage] = useState({ url: '', caption: '' });
 
     // Discount Form
     const [newDiscount, setNewDiscount] = useState({ code: '', percent: 10, maxUses: 100 });
@@ -320,11 +320,22 @@ const displayBookings = useMemo(() => {
     };
 
     const handleAddImage = async () => {
-        if (!newImageUrl.trim()) return;
-        await addGalleryImage({ url: newImageUrl, caption: '' });
-        setNewImageUrl('');
-        toast.success("Image added to gallery");
-        fetchData();
+        if (!newImage.url.trim()) {
+            toast.error("Please enter a valid image URL");
+            return;
+        }
+        try {
+            await addGalleryImage({ 
+                url: newImage.url.trim(), 
+                caption: newImage.caption.trim() || 'HQ Sport' 
+            });
+            setNewImage({ url: '', caption: '' });
+            toast.success("Image added to gallery!");
+            // Real-time subscription will auto-update the gallery state
+        } catch (error) {
+            console.error("Gallery add error:", error);
+            toast.error("Failed to add image. Check URL format.");
+        }
     };
 
     const handleDeleteImage = async (imageId) => {
@@ -526,6 +537,7 @@ const totalRevenue = displayBookings
         { id: 'manual', label: 'New Booking', icon: Plus },
         { id: 'discounts', label: 'Discounts', icon: Tag },
         { id: 'users', label: 'Users', icon: Users },
+        { id: 'gallery', label: 'Gallery', icon: Image },
         { id: 'broadcast', label: 'Broadcast', icon: MessageSquare },
         { id: 'marketing', label: 'Marketing', icon: Megaphone },
     ];
@@ -1306,6 +1318,149 @@ const totalRevenue = displayBookings
                                 </div>
                             </div>
                         )}
+                        {/* Gallery Tab */}
+{activeTab === 'gallery' && (
+    <div className="space-y-6 animate-fade-in">
+        {/* Add New Image Card */}
+        <div className="card p-6 border-l-4 border-yellow-500">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
+                    <Image className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Add New Gallery Image</h3>
+            </div>
+            
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                        Image URL <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                        <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                            type="url"
+                            value={newImage.url}
+                            onChange={(e) => setNewImage({...newImage, url: e.target.value})}
+                            className="input-field pl-10 w-full"
+                            placeholder="https://example.com/court-photo.jpg"
+                        />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Must be a direct image URL (.jpg, .png, .webp)
+                    </p>
+                </div>
+                
+                <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                        Caption (Optional)
+                    </label>
+                    <input
+                        type="text"
+                        value={newImage.caption}
+                        onChange={(e) => setNewImage({...newImage, caption: e.target.value})}
+                        className="input-field w-full"
+                        placeholder="e.g., Premium Indoor Courts • Calcutta"
+                    />
+                </div>
+                
+                <button
+                    onClick={handleAddImage}
+                    disabled={!newImage.url.trim()}
+                    className={`btn-gold w-full flex items-center justify-center gap-2 py-3 ${
+                        !newImage.url.trim() ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                >
+                    <Plus className="w-4 h-4" />
+                    Add to Gallery
+                </button>
+            </div>
+        </div>
+
+        {/* Current Gallery Grid */}
+        <div className="card p-6">
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-white">Current Gallery Images</h3>
+                <span className="text-sm text-gray-400">
+                    {gallery.length} image{gallery.length !== 1 ? 's' : ''}
+                </span>
+            </div>
+            
+            {gallery.length === 0 ? (
+                <div className="text-center py-16 bg-zinc-900/50 rounded-xl border-2 border-dashed border-zinc-800">
+                    <Image className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No images added yet. Start by adding your first gallery image above!</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {gallery.map((image) => (
+                        <div 
+                            key={image.id} 
+                            className="group relative bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 hover:border-yellow-500/30 transition-all duration-300"
+                        >
+                            <div className="aspect-[4/3] overflow-hidden">
+                                <img
+                                    src={image.url}
+                                    alt={image.caption || 'Gallery image'}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTRhNGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHJ4PSIyIi8+PHBhdGggZD0iTTMuNSA4LjVhMiAyIDAgMCAxIDAtNCAyIDIgMCAwIDEgNCAwTTguNSAxNS41YTIgMiAwIDAgMS00IDAgMiAyIDAgMCAxIDAtNE0xNS41IDE1LjVhMiAyIDAgMCAxLTQgMCAyIDIgMCAwIDEgMCA0TTIwLjUgOC41YTIgMiAwIDAgMS00IDAgMiAyIDAgMCAxIDAtNCIvPjwvc3ZnPg==';
+                                    }}
+                                />
+                            </div>
+                            
+                            <div className="p-4">
+                                <p className="text-white font-medium line-clamp-1">
+                                    {image.caption || 'Untitled Image'}
+                                </p>
+                                <p className="text-gray-500 text-xs mt-1 truncate">
+                                    {image.url}
+                                </p>
+                            </div>
+                            
+                            <button
+                                onClick={() => handleDeleteImage(image.id)}
+                                className="absolute top-3 right-3 p-2 bg-red-500/20 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/30 border border-red-500/20"
+                                title="Delete image"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                            
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                <div className="w-full">
+                                    <p className="text-white font-medium line-clamp-2 mb-2">
+                                        {image.caption || 'No caption'}
+                                    </p>
+                                    <div className="flex justify-between text-xs text-gray-300">
+                                        <span>Added: {image.createdAt?.toDate ? format(image.createdAt.toDate(), 'MMM d') : 'N/A'}</span>
+                                        <span>#{gallery.indexOf(image) + 1}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+
+        {/* Tips Card */}
+        <div className="card bg-zinc-900/50 p-5 border border-zinc-800">
+            <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div>
+                    <h4 className="text-white font-medium mb-1">Pro Tips</h4>
+                    <ul className="text-sm text-gray-400 space-y-1">
+                        <li>• Use high-quality images (1920x1080 recommended)</li>
+                        <li>• Compress images before uploading for faster loading</li>
+                        <li>• Captions appear on hover in the public gallery</li>
+                        <li>• Get images from a domain like instagram, post on instagram and get the image URL</li>
+                        <li>• Images appear instantly on the Gallery page via real-time sync</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
 
                     </>
                 )}
