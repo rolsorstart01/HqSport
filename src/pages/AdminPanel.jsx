@@ -186,6 +186,40 @@ const handleReopenCourts = async () => {
 const isClosedCourtBooking = (booking) => {
   return booking?.userId === 'admin-closed';
 };
+// Helper to format slots array into readable time
+const formatSlots = (slots) => {
+    if (!slots || slots.length === 0) return 'N/A';
+    
+    // Convert slot-7 to 7, sort them
+    const hours = slots
+        .map(s => parseInt(s.replace('slot-', '')))
+        .sort((a, b) => a - b);
+    
+    if (hours.length === 0) return 'N/A';
+    
+    // Format single hour
+    const formatHour = (h) => {
+        if (h === 0 || h === 24) return '12:00 AM';
+        if (h === 12) return '12:00 PM';
+        if (h > 12) return `${h - 12}:00 PM`;
+        return `${h}:00 AM`;
+    };
+    
+    // Single slot
+    if (hours.length === 1) {
+        return formatHour(hours[0]);
+    }
+    
+    // Multiple consecutive slots - show range
+    const isConsecutive = hours.every((h, i) => i === 0 || h === hours[i-1] + 1);
+    
+    if (isConsecutive) {
+        return `${formatHour(hours[0])} - ${formatHour(hours[hours.length - 1] + 1)}`;
+    }
+    
+    // Non-consecutive - show count
+    return `${hours.length} slots`;
+};
 
 // Filtered bookings for UI display (excludes closed-court markers)
 const displayBookings = useMemo(() => {
@@ -903,34 +937,36 @@ const totalRevenue = displayBookings
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {displayBookings.map((booking) => (
-                                                <tr key={booking.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
-                                                    <td className="py-3 px-4">
-                                                        <div className={`w-3 h-3 rounded-full ${getBookingStatusColor(booking)}`} title={booking.status}></div>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <p className="text-white text-sm">{booking.userName || 'N/A'}</p>
-                                                        <p className="text-gray-500 text-xs">{booking.userEmail}</p>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-white text-sm">Court {booking.courtId} • {booking.slot}</td>
-                                                    <td className="py-3 px-4 text-gray-300 text-sm">{format(parseISO(booking.date), 'MMM d, yyyy')}</td>
-                                                    <td className="py-3 px-4 text-yellow-400 font-medium text-sm">{formatCurrency(booking.totalAmount || 0)}</td>
-                                                    <td className="py-3 px-4">
-                                                        {booking.status !== 'cancelled' && (
-                                                            <button
-                                                                onClick={() => handleCancelBooking(booking.id)}
-                                                                className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        )}
-                                                        {booking.status === 'cancelled' && (
-                                                            <span className="text-gray-500 text-xs italic">Cancelled</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
+    {displayBookings.map((booking) => (
+        <tr key={booking.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
+            <td className="py-3 px-4">
+                <div className={`w-3 h-3 rounded-full ${getBookingStatusColor(booking)}`} title={booking.status}></div>
+            </td>
+            <td className="py-3 px-4">
+                <p className="text-white text-sm">{booking.userName || 'N/A'}</p>
+                <p className="text-gray-500 text-xs">{booking.userEmail}</p>
+            </td>
+            <td className="py-3 px-4 text-white text-sm">
+                Court {booking.courtId} • {booking.slot || formatSlots(booking.slots)}
+            </td>
+            <td className="py-3 px-4 text-gray-300 text-sm">{format(parseISO(booking.date), 'MMM d, yyyy')}</td>
+            <td className="py-3 px-4 text-yellow-400 font-medium text-sm">{formatCurrency(booking.totalAmount || 0)}</td>
+            <td className="py-3 px-4">
+                {booking.status !== 'cancelled' && (
+                    <button
+                        onClick={() => handleCancelBooking(booking.id)}
+                        className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
+                    >
+                        Cancel
+                    </button>
+                )}
+                {booking.status === 'cancelled' && (
+                    <span className="text-gray-500 text-xs italic">Cancelled</span>
+                )}
+            </td>
+        </tr>
+    ))}
+</tbody>
                                     </table>
                                 </div>
                             </div>
@@ -1129,79 +1165,93 @@ const totalRevenue = displayBookings
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.map((u) => (
-                                            <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
-                                                <td className="py-3 px-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 font-medium">
-                                                            {u.displayName?.[0]?.toUpperCase() || '?'}
-                                                        </div>
-                                                        <span className="text-white">{u.displayName || 'N/A'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4 text-gray-400">{u.email}</td>
-                                                <td className="py-3 px-4">
-                                                    <span className={`badge text-xs ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                                                        u.role === 'user' ? 'badge-gold' : 'bg-zinc-800 text-gray-400'
-                                                        }`}>
-                                                        {u.role || 'user'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    {u.banned ? (
-                                                        <span className="badge text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                                                            Banned
-                                                        </span>
-                                                    ) : (
-                                                        <span className="badge text-xs bg-green-500/20 text-green-400 border-green-500/30">
-                                                            Active
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="py-3 px-4 text-gray-300">{u.totalBookings || 0}</td>
-                                                {isAdmin && u.id !== user?.uid && (
-                                                    <td className="py-3 px-4">
-                                                        <div className="flex items-center gap-2">
-                                                            {u.role === 'admin' ? (
-                                                                <button
-                                                                    onClick={() => handleRoleChange(u.id, 'user')}
-                                                                    className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
-                                                                >
-                                                                    <UserMinus className="w-3 h-3 inline mr-1" />
-                                                                    Remove Admin
-                                                                </button>
-                                                            ) : u.role !== 'admin' && (
-                                                                <button
-                                                                    onClick={() => handleRoleChange(u.id, 'admin')}
-                                                                    className="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20"
-                                                                >
-                                                                    <UserPlus className="w-3 h-3 inline mr-1" />
-                                                                    Make Admin
-                                                                </button>
-                                                            )}
-                                                            {u.role !== 'admin' && (
-                                                                u.banned ? (
-                                                                    <button
-                                                                        onClick={() => handleUnbanUser(u.id)}
-                                                                        className="text-green-400 hover:text-green-300 text-xs px-2 py-1 rounded bg-green-500/10 border border-green-500/20"
-                                                                    >
-                                                                        Unban
-                                                                    </button>
-                                                                ) : (
-                                                                    <button
-                                                                        onClick={() => handleBanUser(u.id)}
-                                                                        className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
-                                                                    >
-                                                                        Ban User
-                                                                    </button>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
+    {users.map((u) => {
+        // Debug: Log each user to see their structure
+        console.log('Processing user:', u.id, { displayName: u.displayName, name: u.name, email: u.email, role: u.role });
+        
+        return (
+            <tr key={u.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
+                <td className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 font-medium">
+                            {u.displayName?.charAt(0)?.toUpperCase() || 
+                             u.name?.charAt(0)?.toUpperCase() || 
+                             u.email?.charAt(0)?.toUpperCase() || 
+                             '?'}
+                        </div>
+                        <span className="text-white">
+                            {u.displayName || u.name || u.email?.split('@')[0] || 'N/A'}
+                        </span>
+                    </div>
+                </td>
+                <td className="py-3 px-4 text-gray-400">{u.email || 'N/A'}</td>
+                <td className="py-3 px-4">
+                    <span className={`badge text-xs px-2 py-1 rounded-full ${
+                        u.role === 'admin' 
+                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' 
+                            : u.role === 'superadmin'
+                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                            : 'bg-green-500/20 text-green-400 border-green-500/30'
+                    }`}>
+                        {u.role?.toLowerCase() || 'user'}
+                    </span>
+                </td>
+                <td className="py-3 px-4">
+                    {u.banned || u.isBanned ? (
+                        <span className="badge text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border-red-500/30">
+                            Banned
+                        </span>
+                    ) : (
+                        <span className="badge text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 border-green-500/30">
+                            Active
+                        </span>
+                    )}
+                </td>
+                <td className="py-3 px-4 text-gray-300">{u.totalBookings || u.bookings?.length || 0}</td>
+                {isAdmin && u.id !== user?.uid && (
+                    <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                            {u.role === 'admin' ? (
+                                <button
+                                    onClick={() => handleRoleChange(u.id, 'user')}
+                                    className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
+                                >
+                                    <UserMinus className="w-3 h-3 inline mr-1" />
+                                    Remove Admin
+                                </button>
+                            ) : u.role !== 'admin' && u.role !== 'superadmin' && (
+                                <button
+                                    onClick={() => handleRoleChange(u.id, 'admin')}
+                                    className="text-yellow-400 hover:text-yellow-300 text-xs px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20"
+                                >
+                                    <UserPlus className="w-3 h-3 inline mr-1" />
+                                    Make Admin
+                                </button>
+                            )}
+                            {u.role !== 'admin' && u.role !== 'superadmin' && (
+                                (u.banned || u.isBanned) ? (
+                                    <button
+                                        onClick={() => handleUnbanUser(u.id)}
+                                        className="text-green-400 hover:text-green-300 text-xs px-2 py-1 rounded bg-green-500/10 border border-green-500/20"
+                                    >
+                                        Unban
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleBanUser(u.id)}
+                                        className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
+                                    >
+                                        Ban User
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    </td>
+                )}
+            </tr>
+        );
+    })}
+</tbody>
                                 </table>
                             </div>
                         )}
