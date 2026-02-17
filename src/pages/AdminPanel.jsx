@@ -402,69 +402,68 @@ const displayBookings = useMemo(() => {
         toast.success("Discount deleted");
         fetchData();
     };
+const handleManualBooking = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-    const handleManualBooking = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    try {
+        // Check if slot is already taken (using local bookings state instead of getBookingsForDate)
+        const isTaken = bookings.some(b =>
+            b.status !== 'cancelled' &&
+            b.date === manualBooking.date &&
+            parseInt(b.courtId) === parseInt(manualBooking.courtId) &&
+            (b.slot === manualBooking.timeSlot || (b.slots && b.slots.includes(`slot-${parseInt(manualBooking.timeSlot.split(':')[0])}`)))
+        );
 
-        try {
-            // Check if slot is already taken
-            const { bookings: existingBookings } = await getBookingsForDate(manualBooking.date);
-            const isTaken = existingBookings.some(b =>
-                b.status !== 'cancelled' &&
-                parseInt(b.courtId) === parseInt(manualBooking.courtId) &&
-                (b.slot === manualBooking.timeSlot || (b.slots && b.slots.includes(`slot-${parseInt(manualBooking.timeSlot)}`)))
-            );
-
-            if (isTaken) {
-                toast.error("This slot is already booked!");
-                setLoading(false);
-                return;
-            }
-
-            // Find user if exists
-            const existingUser = users.find(u => u.email.toLowerCase() === manualBooking.userEmail.toLowerCase());
-
-            const bookingData = {
-                userId: existingUser ? existingUser.id : 'admin-created',
-                userEmail: manualBooking.userEmail,
-                userName: manualBooking.userName || (existingUser ? existingUser.displayName : 'Admin Booking'),
-                courtId: parseInt(manualBooking.courtId),
-                date: manualBooking.date,
-                slot: manualBooking.timeSlot,
-                slots: [`slot-${parseInt(manualBooking.timeSlot)}`],
-                totalAmount: parseInt(manualBooking.amount),
-                paidAmount: manualBooking.paid ? parseInt(manualBooking.amount) : 0,
-                remainingAmount: manualBooking.paid ? 0 : parseInt(manualBooking.amount),
-                status: 'booked',
-                paymentId: manualBooking.paid ? 'manual_admin_entry' : null
-            };
-
-            const result = await createBooking(bookingData);
-            if (result.error) {
-                toast.error(result.error);
-            } else {
-                toast.success("Manual booking created successfully");
-
-                // Send Email
-                sendBookingEmail(bookingData);
-
-                setManualBooking({
-                    userEmail: '',
-                    userName: '',
-                    courtId: 1,
-                    date: format(new Date(), 'yyyy-MM-dd'),
-                    timeSlot: '07:00',
-                    amount: 800,
-                    paid: true
-                });
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to create booking");
+        if (isTaken) {
+            toast.error("This slot is already booked!");
+            setLoading(false);
+            return;
         }
-        setLoading(false);
-    };
+
+        // Find user if exists
+        const existingUser = users.find(u => u.email.toLowerCase() === manualBooking.userEmail.toLowerCase());
+
+        const bookingData = {
+            userId: existingUser ? existingUser.id : 'admin-created',
+            userEmail: manualBooking.userEmail,
+            userName: manualBooking.userName || (existingUser ? existingUser.displayName : 'Admin Booking'),
+            courtId: parseInt(manualBooking.courtId),
+            date: manualBooking.date,
+            slot: manualBooking.timeSlot,
+            slots: [`slot-${parseInt(manualBooking.timeSlot.split(':')[0])}`],
+            totalAmount: parseInt(manualBooking.amount),
+            paidAmount: manualBooking.paid ? parseInt(manualBooking.amount) : 0,
+            remainingAmount: manualBooking.paid ? 0 : parseInt(manualBooking.amount),
+            status: 'booked',
+            paymentId: manualBooking.paid ? 'manual_admin_entry' : null
+        };
+
+        const result = await createBooking(bookingData);
+        if (result.error) {
+            toast.error(result.error);
+        } else {
+            toast.success("Manual booking created successfully");
+
+            // Send Email
+            sendBookingEmail(bookingData);
+
+            setManualBooking({
+                userEmail: '',
+                userName: '',
+                courtId: 1,
+                date: format(new Date(), 'yyyy-MM-dd'),
+                timeSlot: '07:00',
+                amount: 800,
+                paid: true
+            });
+        }
+    } catch (err) {
+        console.error("Manual booking error:", err);
+        toast.error("Failed to create booking");
+    }
+    setLoading(false);
+};
 
     const handleExportUsers = () => {
         // Filter users by city if you want, but here we export all (most are Calcutta)
