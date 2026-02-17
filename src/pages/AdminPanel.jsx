@@ -7,11 +7,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
-    getAllUsers, getAllBookings, setUserRole, sendBroadcast,
-    getBroadcasts, getGalleryImages, addGalleryImage, deleteGalleryImage,
-    cancelBooking, createDiscount, getDiscounts, deleteDiscount,
-    createBooking, subscribeToBookings, subscribeToUsers, subscribeToDiscounts,
-    subscribeToBroadcasts, subscribeToGallery, banUser, unbanUser
+getAllUsers, getAllBookings, setUserRole, sendBroadcast,
+getBroadcasts, getGalleryImages, addGalleryImage, deleteGalleryImage,
+cancelBooking, createDiscount, getDiscounts, deleteDiscount,
+createBooking, getBookingsForDate, subscribeToBookings, subscribeToUsers, subscribeToDiscounts,
+subscribeToBroadcasts, subscribeToGallery, banUser, unbanUser
 } from '../services/firebase';
 import BookingCalendar from '../components/booking/BookingCalendar';
 import { formatCurrency } from '../services/razorpay';
