@@ -6,7 +6,7 @@ import BookingCalendar from '../components/booking/BookingCalendar';
 import CourtSelector from '../components/booking/CourtSelector';
 import TimeSlotPicker from '../components/booking/TimeSlotPicker';
 import { useAuth } from '../context/AuthContext';
-import { createBooking, getBookingsForDate, getDiscounts } from '../services/firebase';
+import { createBooking, getBookingsForDate, getDiscounts, incrementDiscountUsage } from '../services/firebase';
 import { createPayment, formatCurrency } from '../services/razorpay';
 import { sendBookingEmail } from '../services/emailService';
 
@@ -112,110 +112,130 @@ const Book = ({ onLoginRequired }) => {
         if (step > 1) setStep(step - 1);
     };
 
-    const handlePayment = async () => {
-        if (!isAuthenticated) {
-            onLoginRequired();
+// In Book.jsx, update handlePayment function
+
+const handlePayment = async () => {
+    if (!isAuthenticated) {
+        onLoginRequired();
+        return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    const bookingDetails = {
+        courtId: selectedCourt,
+        courtName: `Court ${selectedCourt}`,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        displayDate: format(selectedDate, 'EEEE, MMMM d, yyyy'),
+        slots: selectedSlots,
+        discountCode: appliedDiscount?.code || null,  // ✅ Add discount code
+        discountAmount: discountAmount  // ✅ Add discount amount
+    };
+
+    // Double check availability before payment
+    try {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const { bookings } = await getBookingsForDate(dateStr);
+        const slotsForCourt = bookings
+            .filter(b => b.status !== 'cancelled' && b.courtId === selectedCourt)
+            .flatMap(b => b.slots || []);
+
+        const isTaken = selectedSlots.some(slot => slotsForCourt.includes(slot));
+        if (isTaken) {
+            setError('One or more selected slots just became unavailable. Please choose another time.');
+            setLoading(false);
             return;
         }
+    } catch (err) {
+        console.error("Availability check failed: ", err);
+    }
 
-        setLoading(true);
-        setError('');
+    // Handle 100% discount (zero amount)
+    if (totalAmount === 0) {
+        const { id, error: bookingError } = await createBooking({
+            userId: user.uid,
+            userEmail: user.email,
+            userName: userData?.displayName || user.email,
+            ...bookingDetails,
+            totalAmount: 0,
+            paidAmount: 0,
+            remainingAmount: 0,
+            paymentType: 'full',
+            paymentId: 'free_promo_code',
+            status: 'booked'
+        });
 
-        const bookingDetails = {
-            courtId: selectedCourt,
-            courtName: `Court ${selectedCourt}`,
-            date: format(selectedDate, 'yyyy-MM-dd'),
-            displayDate: format(selectedDate, 'EEEE, MMMM d, yyyy'),
-            slots: selectedSlots
-        };
-
-        // Double check availability before payment
-        try {
-            const dateStr = format(selectedDate, 'yyyy-MM-dd');
-            const { bookings } = await getBookingsForDate(dateStr);
-            const slotsForCourt = bookings
-                .filter(b => b.status !== 'cancelled' && b.courtId === selectedCourt)
-                .flatMap(b => b.slots || []);
-
-            const isTaken = selectedSlots.some(slot => slotsForCourt.includes(slot));
-            if (isTaken) {
-                setError('One or more selected slots just became unavailable. Please choose another time.');
-                setLoading(false);
-                return;
+        if (bookingError) {
+            setError('Booking failed. Please contact support.');
+        } else {
+            // ✅ Increment discount usage if discount was applied
+            if (appliedDiscount) {
+                await incrementDiscountUsage(appliedDiscount.id);
             }
-        } catch (err) {
-            console.error("Availability check failed:", err);
+            
+            setBookingId(id);
+            setBookingComplete(true);
+            if (appliedDiscount) {
+    await incrementDiscountUsage(appliedDiscount.id);
+}
         }
+        setLoading(false);
+        return;
+    }
 
-        // Handle 100% discount (zero amount)
-        if (totalAmount === 0) {
+    createPayment({
+        amount: totalAmount,
+        bookingDetails,
+        user: { ...user, displayName: userData?.displayName },
+        onSuccess: async (paymentData) => {
             const { id, error: bookingError } = await createBooking({
                 userId: user.uid,
                 userEmail: user.email,
                 userName: userData?.displayName || user.email,
                 ...bookingDetails,
-                totalAmount: 0,
-                paidAmount: 0,
+                totalAmount,
+                paidAmount: paymentData.amount,
                 remainingAmount: 0,
                 paymentType: 'full',
-                paymentId: 'free_promo_code',
+                paymentId: paymentData.paymentId,
                 status: 'booked'
             });
 
             if (bookingError) {
-                setError('Booking failed. Please contact support.');
+                setError('Booking saved but confirmation failed. Please contact support.');
             } else {
+                // ✅ Increment discount usage if discount was applied
+                if (appliedDiscount) {
+                    await incrementDiscountUsage(appliedDiscount.id);
+                }
+                
                 setBookingId(id);
                 setBookingComplete(true);
-            }
-            setLoading(false);
-            return;
-        }
+                if (appliedDiscount) {
+    await incrementDiscountUsage(appliedDiscount.id);
+}
 
-        createPayment({
-            amount: totalAmount,
-            bookingDetails,
-            user: { ...user, displayName: userData?.displayName },
-            onSuccess: async (paymentData) => {
-                const { id, error: bookingError } = await createBooking({
+                // Send Email
+                sendBookingEmail({
                     userId: user.uid,
                     userEmail: user.email,
                     userName: userData?.displayName || user.email,
                     ...bookingDetails,
                     totalAmount,
                     paidAmount: paymentData.amount,
-                    remainingAmount: 0,
-                    paymentType: 'full',
                     paymentId: paymentData.paymentId,
                     status: 'booked'
                 });
-
-                if (bookingError) {
-                    setError('Booking saved but confirmation failed. Please contact support.');
-                } else {
-                    setBookingId(id);
-                    setBookingComplete(true);
-
-                    // Send Email
-                    sendBookingEmail({
-                        userId: user.uid,
-                        userEmail: user.email,
-                        userName: userData?.displayName || user.email,
-                        ...bookingDetails,
-                        totalAmount,
-                        paidAmount: paymentData.amount,
-                        paymentId: paymentData.paymentId,
-                        status: 'booked'
-                    });
-                }
-                setLoading(false);
-            },
-            onError: (errorMessage) => {
-                setError(errorMessage);
-                setLoading(false);
             }
-        });
-    };
+            setLoading(false);
+        },
+        onError: (errorMessage) => {
+            setError(errorMessage);
+            setLoading(false);
+        }
+    });
+};
 
     // Success Screen
     if (bookingComplete) {

@@ -402,15 +402,17 @@ const displayBookings = useMemo(() => {
         toast.success("Discount deleted");
         fetchData();
     };
+// In AdminPanel.jsx, update handleManualBooking
+
 const handleManualBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-        // Check if slot is already taken (using local bookings state instead of getBookingsForDate)
-        const isTaken = bookings.some(b =>
+        // Check if slot is already taken
+        const { bookings: existingBookings } = await getBookingsForDate(manualBooking.date);
+        const isTaken = existingBookings.some(b =>
             b.status !== 'cancelled' &&
-            b.date === manualBooking.date &&
             parseInt(b.courtId) === parseInt(manualBooking.courtId) &&
             (b.slot === manualBooking.timeSlot || (b.slots && b.slots.includes(`slot-${parseInt(manualBooking.timeSlot.split(':')[0])}`)))
         );
@@ -444,10 +446,7 @@ const handleManualBooking = async (e) => {
             toast.error(result.error);
         } else {
             toast.success("Manual booking created successfully");
-
-            // Send Email
             sendBookingEmail(bookingData);
-
             setManualBooking({
                 userEmail: '',
                 userName: '',
