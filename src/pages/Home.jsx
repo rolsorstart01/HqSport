@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, MapPin, Clock, Users, Star, Zap, Trophy, Wifi, Coffee, Car, Sparkles, ChevronRight } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Users, Star, Zap, Trophy, Wifi, Coffee, Car, Sparkles, ChevronRight, Phone } from 'lucide-react';
 
 const Home = () => {
     const features = [
@@ -282,6 +282,15 @@ const Home = () => {
                                             6:00 AM — 12:00 AM<br />
                                             <span className="text-gold-gradient font-medium">Open 7 days a week</span>
                                         </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-5">
+                                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 flex-shrink-0 border border-yellow-500/10">
+                                        <Phone className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold mb-1">Contact Number</p>
+                                        <a href="https://wa.me/919073005990"><p className="text-slate-400">+91 9073005990</p></a>
                                     </div>
                                 </div>
                             </div>

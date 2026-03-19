@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Instagram, MapPin, Clock, Mail, MessageCircle } from 'lucide-react';
+import { Instagram, MapPin, Clock, Mail, MessageCircle, Phone } from 'lucide-react';
 // cleaned up unused import
 
 const Footer = () => {
@@ -77,6 +77,12 @@ const Footer = () => {
                             <li className="flex items-center gap-3 text-slate-400">
                                 <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                                 <span>6 AM — 12 AM Daily</span>
+                            </li>
+                            <li className="flex items-center gap-3 text-slate-400">
+                                <Phone className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                                <a href="https://wa.me/919073005990">
+                                <span>+91 9073005990</span>
+                                </a>
                             </li>
                         </ul>
                     </div>
